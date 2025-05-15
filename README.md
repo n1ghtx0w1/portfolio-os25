@@ -30,12 +30,17 @@ This interactive experience launches with a bootloader screen, drops users into 
 
 ## 📁 Project Structure
 
-/public # Static files (icons, backgrounds)
-├── icons/ # Terminal SVG, etc.
-/src
-├── components/ # Terminal.jsx, BootScreen.jsx, Desktop.jsx
-├── App.jsx # Routing logic
-├── main.jsx # React entry point
+portfolio-os25/
+├── public/                 # Static files (icons, backgrounds)
+│   └── icons/              # Terminal SVG, etc.
+├── src/
+│   ├── components/         # Terminal.jsx, BootScreen.jsx, Desktop.jsx
+│   ├── App.jsx             # Routing logic
+│   └── main.jsx            # React entry point
+├── .gitignore
+├── index.html
+├── package.json
+└── README.md
 
 ---
 
