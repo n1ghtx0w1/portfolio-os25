@@ -41,11 +41,12 @@ This interactive experience launches with a bootloader screen, drops users into 
 
 ## 🛠 Setup Instructions
 
+```bash
 git clone https://github.com/n1ghtx0w1/portfolio-os25.git
 cd portfolio-os25
 npm install
 npm run dev
-Then open http://localhost:5173 in your browser.
+```
 
 🧪 Example Commands (in terminal)
 Command	Description
