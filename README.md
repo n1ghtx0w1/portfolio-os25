@@ -29,7 +29,7 @@ This interactive experience launches with a bootloader screen, drops users into 
 ---
 
 ## 📁 Project Structure
-
+```
 portfolio-os25/
 ├── public/                 # Static files (icons, backgrounds)
 │   └── icons/              # Terminal SVG, etc.
@@ -41,6 +41,7 @@ portfolio-os25/
 ├── index.html
 ├── package.json
 └── README.md
+```
 
 ---
 
