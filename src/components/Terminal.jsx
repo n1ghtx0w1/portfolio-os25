@@ -47,7 +47,7 @@ const handleCommand = (e) => {
     } else if (trimmed === 'help') {
       response = 'Available commands: start, help, about, clear, exit, motd, whoami, date';
     } else if (trimmed === 'about') {
-      response = 'This portfolio belongs to Robert Head, a cybersecurity developer.';
+      response = 'Welcome to OS25, a terminal & desktop portfolio site created by Robert.';
     } else if (trimmed === 'clear') {
       setHistory([]);
       setInput('');

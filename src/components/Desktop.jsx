@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AboutWindow from './AboutWindow';
 
 export default function Desktop({ onExit }) {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
@@ -6,6 +7,7 @@ export default function Desktop({ onExit }) {
   const [launchingTerminal, setLaunchingTerminal] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
   const [volume, setVolume] = useState(50);
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -59,54 +61,70 @@ export default function Desktop({ onExit }) {
       {showStartMenu && (
         <div className="absolute bottom-12 left-4 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg text-sm z-50 start-menu">
           <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={onExit}>🖥 Terminal</div>
-          <div className="p-2 hover:bg-gray-700 cursor-pointer">👤 About</div>
-          <div className="p-2 hover:bg-gray-700 cursor-pointer">📁 Projects</div>
+          <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={() => setShowAbout(true)}>👤 About</div>
+          <a
+            href="https://github.com/n1ghtx0w1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 hover:bg-gray-700 cursor-pointer block"
+          >
+            📁 Projects
+          </a>
           <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={() => setShowStartMenu(false)}>❌ Close Menu</div>
         </div>
       )}
 
-{/* Taskbar */}
-<div className="absolute bottom-0 w-full bg-black bg-opacity-80 h-10 flex justify-between items-center px-4">
-  {/* Start Button */}
-  <div
-    onClick={() => setShowStartMenu((prev) => !prev)}
-    className="text-sm text-white cursor-pointer hover:bg-white/10 px-2 py-1 rounded start-button"
-  >
-    🟢 Start
-  </div>
+      {/* About Window (outside start menu) */}
+      {showAbout && <AboutWindow onClose={() => setShowAbout(false)} />}
 
-  {/* Right-aligned Volume + Time */}
-  <div className="flex items-center gap-4">
-    {/* Volume (left of time) */}
-    <div className="relative volume-control">
-      <button
-        onClick={() => setShowVolume((prev) => !prev)}
-        className="text-white hover:bg-white/10 px-2 py-1 rounded"
-      >
-        🔊
-      </button>
-
-      {showVolume && (
-        <div className="absolute bottom-10 right-0 w-32 bg-gray-800 p-2 rounded shadow border border-gray-700">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={volume}
-            onChange={(e) => setVolume(parseInt(e.target.value))}
-            className="w-full"
+      {/* Taskbar */}
+      <div className="absolute bottom-0 w-full h-12 px-4 flex justify-between items-center
+        bg-black/60 backdrop-blur-md border-t border-gray-700 rounded-t-xl shadow-md z-50">
+        
+        {/* Start Button */}
+        <div
+          onClick={() => setShowStartMenu((prev) => !prev)}
+          className="start-button cursor-pointer p-1 rounded focus:outline-none"
+        >
+          <img
+            src="/icons/menu-button.png"
+            alt="Start"
+            className="w-8 h-8 object-contain"
           />
-          <div className="text-xs text-center text-gray-300 mt-1">
-            {volume}%
-          </div>
         </div>
-      )}
-    </div>
 
-    {/* Time (right of volume) */}
-    <div className="text-sm text-gray-300">{time}</div>
-  </div>
- </div>
-</div>
+        {/* Right-aligned Volume + Time */}
+        <div className="flex items-center gap-4">
+          {/* Volume */}
+          <div className="relative volume-control">
+            <button
+              onClick={() => setShowVolume((prev) => !prev)}
+              className="text-white hover:bg-white/10 px-2 py-1 rounded"
+            >
+              🔊
+            </button>
+
+            {showVolume && (
+              <div className="absolute bottom-10 right-0 w-32 bg-gray-800 p-2 rounded shadow border border-gray-700">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={volume}
+                  onChange={(e) => setVolume(parseInt(e.target.value))}
+                  className="w-full"
+                />
+                <div className="text-xs text-center text-gray-300 mt-1">
+                  {volume}%
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Clock */}
+          <div className="text-sm text-gray-300">{time}</div>
+        </div>
+      </div>
+    </div>
   );
 }

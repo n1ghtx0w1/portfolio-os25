@@ -12,9 +12,11 @@ This interactive experience launches with a bootloader screen, drops users into 
 - ✅ Terminal-style login shell (`guest@os25:~$`)
 - ✅ Custom commands like `start`, `help`, `whoami`, and more
 - ✅ Transition into a full desktop UI
-- ✅ Start menu with basic app launcher
+- ✅ Start menu with app launcher and external links
 - ✅ Terminal icon to return to command view
-- ✅ Clock and volume slider like a real OS
+- ✅ Clock and volume slider (functional)
+- ✅ Rounded, blurred taskbar with icon-based start button
+- ✅ About window with profile image and bio text
 
 ---
 
