@@ -21,23 +21,22 @@ export default function Desktop({ onExit }) {
   const [markdownContent, setMarkdownContent] = useState('');
   const [startPath, setStartPath] = useState('/');
   const [showExploit, setShowExploit] = useState(false);
+  const [showRickrollIcon, setShowRickrollIcon] = useState(false);
 
   // Handle file opening from File Explorer
   const handleOpenFile = (path, content) => {
     const ext = path.split('.').pop();
     const filename = path.split('/').pop();
-if (ext === 'sh') {
-  setShowExploit(true);
-} else if (ext === 'txt') {
-  setOpenTextFile(filename);
-  setTextFileContent(content);
-} else if (ext === 'md') {
-  setOpenMarkdownFile(filename);
-  setMarkdownContent(content);
-}
-
-
-
+    if (ext === 'sh') {
+      localStorage.setItem('ranExploit', 'true');
+      setShowExploit(true);
+    } else if (ext === 'txt') {
+      setOpenTextFile(filename);
+      setTextFileContent(content);
+    } else if (ext === 'md') {
+      setOpenMarkdownFile(filename);
+      setMarkdownContent(content);
+    }
   };
 
   // Clock timer
@@ -74,6 +73,13 @@ if (ext === 'sh') {
     });
   }, []);
 
+  // Show Rickroll browser icon after exploit
+  useEffect(() => {
+    if (localStorage.getItem('ranExploit') === 'true') {
+      setShowRickrollIcon(true);
+    }
+  }, []);
+
   if (launchingTerminal) {
     return (
       <div className="w-screen h-screen bg-black text-green-400 flex items-center justify-center text-xl font-mono">
@@ -86,17 +92,27 @@ if (ext === 'sh') {
     <div className="relative w-screen h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white overflow-hidden">
       
       {/* Blog Folder Shortcut */}
-    <div
-      className="absolute top-24 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
-      onClick={() => {
-      setStartPath('/home/guest/blog');
-      setShowFiles(true);
-    }}
-    >
-    <img src="/icons/folder-icon.png" alt="Blog Folder" className="w-12 h-12" />
-      <span className="text-xs mt-1 text-center">Blog</span>
-    </div>
+      <div
+        className="absolute top-24 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
+        onClick={() => {
+          setStartPath('/home/guest/blog');
+          setShowFiles(true);
+        }}
+      >
+        <img src="/icons/folder-icon.png" alt="Blog Folder" className="w-12 h-12" />
+        <span className="text-xs mt-1 text-center">Blog</span>
+      </div>
 
+      {/* Rickroll Browser Icon */}
+      {showRickrollIcon && (
+        <div
+          className="absolute top-44 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
+          onClick={() => window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')}
+        >
+          <img src="/icons/browser-icon.png" alt="Browser" className="w-12 h-12" />
+          <span className="text-xs mt-1 text-center">Browser</span>
+        </div>
+      )}
 
       {/* Terminal Icon */}
       <div
@@ -116,7 +132,8 @@ if (ext === 'sh') {
           <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={onExit}>🖥 Terminal</div>
           <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={() => setShowAbout(true)}>👤 About</div>
           <div className="p-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2" onClick={() => { setStartPath('/'); setShowFiles(true); }} >
-          <img src="/icons/folder-icon.png" alt="Files" className="w-4 h-4" /> Files </div>
+            <img src="/icons/folder-icon.png" alt="Files" className="w-4 h-4" /> Files
+          </div>
           <a
             href="https://github.com/n1ghtx0w1"
             target="_blank"
@@ -154,7 +171,6 @@ if (ext === 'sh') {
       )}
 
       {showExploit && <ExploitModal onComplete={onExit} />}
-
 
       {/* Taskbar */}
       <div className="absolute bottom-0 w-full h-12 px-4 flex justify-between items-center bg-black/60 backdrop-blur-md border-t border-gray-700 rounded-t-xl shadow-md z-50">
