@@ -4,8 +4,45 @@ import { Rnd } from "react-rnd";
 const joinPath = (...segments) =>
   segments.join("/").replace(/\/+/g, "/").replace(/\/$/, "");
 
-function PermissionDeniedModal({ onClose }) { /* ...same as before... */ }
-function ThankYouModal({ onClose }) { /* ...same as before... */ }
+function PermissionDeniedModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
+      <div className="bg-gray-900 text-white rounded-lg p-6 w-[90vw] max-w-xs mx-auto text-center shadow-lg border border-red-500">
+        <div className="text-3xl mb-2">⛔</div>
+        <h2 className="text-lg font-bold mb-2">Access Denied</h2>
+        <p className="mb-4 text-sm">
+          You do not have permission to open this folder as a guest user.
+        </p>
+        <button
+          className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm"
+          onClick={onClose}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ThankYouModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
+      <div className="bg-gray-900 text-white rounded-lg p-6 w-[90vw] max-w-xs mx-auto text-center shadow-lg border border-green-500">
+        <div className="text-3xl mb-2">👍</div>
+        <h2 className="text-lg font-bold mb-2">Thank You</h2>
+        <p className="mb-4 text-sm">
+          You removed a malicious file from the OS!
+        </p>
+        <button
+          className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm"
+          onClick={onClose}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function FileNode({
   name,
@@ -14,13 +51,18 @@ function FileNode({
   onOpenFile,
   onNavigateDenied,
   onShowContextMenu,
+  level = 0,
 }) {
   const isFolder = typeof content === "object" && !content.content;
   const [expanded, setExpanded] = useState(false);
 
-  const handleClick = () => {
+  // Check for folder restriction
+  const isRestricted = !(path.startsWith("/home") || path.startsWith("/tmp"));
+
+  const handleClick = (e) => {
+    e.stopPropagation();
     if (isFolder) {
-      if (!(path.startsWith("/home") || path.startsWith("/tmp"))) {
+      if (isRestricted) {
         onNavigateDenied();
         return;
       }
@@ -37,33 +79,44 @@ function FileNode({
     }
   };
 
+  // Responsive indent: less left margin on mobile
+  const indentClass =
+    level === 0
+      ? ""
+      : `ml-${Math.min(level, 4) * (window.innerWidth < 640 ? 1 : 2)}`;
+
   return (
-    <div className="ml-4">
+    <div className={indentClass}>
       <div
-        className="cursor-pointer hover:bg-white/10 rounded px-1 py-0.5 flex justify-between items-center"
+        className={`flex items-center px-1 py-1 rounded cursor-pointer select-none hover:bg-white/10`}
+        style={{
+          fontWeight: isFolder ? 600 : 400,
+          fontSize: "1rem",
+          gap: 4,
+        }}
         onClick={handleClick}
         onContextMenu={handleRightClick}
       >
-        <div className="flex-1">
-          {isFolder ? (
-            <img
-              src="/icons/folder-icon.png"
-              alt="Folder"
-              className="inline-block w-4 h-4 mr-1"
-            />
-          ) : (
-            "📄"
-          )}{" "}
-          {content?.title || name}
-        </div>
+        {isFolder ? (
+          <img
+            src="/icons/folder-icon.png"
+            alt="Folder"
+            className="inline-block w-4 h-4 mr-1"
+            draggable={false}
+          />
+        ) : (
+          "📄"
+        )}
+        <span className="truncate">{content?.title || name}</span>
         {content?.date && (
-          <div className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+          <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
             {new Date(content.date).toLocaleDateString()}
-          </div>
+          </span>
         )}
       </div>
-      {isFolder && expanded && (
-        <div className="pl-2">
+      {/* Only render folder children if allowed and expanded */}
+      {isFolder && expanded && !isRestricted && (
+        <div>
           {Object.entries(content)
             .sort((a, b) => {
               const aDate = a[1]?.date ? new Date(a[1].date) : new Date(0);
@@ -79,6 +132,7 @@ function FileNode({
                 onOpenFile={onOpenFile}
                 onNavigateDenied={onNavigateDenied}
                 onShowContextMenu={onShowContextMenu}
+                level={level + 1}
               />
             ))}
         </div>
@@ -131,24 +185,30 @@ export default function FileExplorer({
     setContextMenu({ ...contextMenu, visible: false });
   };
 
+  // Responsive sizing for Rnd (windowed) File Explorer
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+  const width = isMobile ? window.innerWidth * 0.98 : 500;
+  const height = isMobile ? window.innerHeight * 0.7 : 400;
+
   return (
     <>
       <Rnd
         default={{
-          x: 20,
-          y: 20,
-          width: window.innerWidth < 640 ? window.innerWidth * 0.9 : 500,
-          height: window.innerHeight < 640 ? window.innerHeight * 0.6 : 400,
+          x: isMobile ? 0 : 20,
+          y: isMobile ? 0 : 20,
+          width: width,
+          height: height,
         }}
-        minWidth={280}
-        minHeight={200}
+        minWidth={240}
+        minHeight={180}
         bounds="window"
         dragHandleClassName="window-header"
-        disableDragging={window.innerWidth < 640}
+        disableDragging={isMobile}
         className="z-50 border border-gray-700 rounded-md overflow-hidden shadow-lg"
       >
         <div
           className="bg-gray-900 text-white w-full h-full flex flex-col"
+          style={{ touchAction: "pan-y" }}
           onClick={handleCloseContextMenu}
         >
           <div className="window-header flex justify-between items-center bg-gray-800 text-white px-3 py-2 border-b border-gray-700 cursor-move">
@@ -160,7 +220,7 @@ export default function FileExplorer({
               ✖
             </button>
           </div>
-          <div className="p-3 text-sm font-mono overflow-auto flex-1">
+          <div className="p-2 sm:p-3 text-sm font-mono overflow-auto flex-1">
             {Object.entries(current)
               .sort((a, b) => {
                 const aDate = a[1]?.date ? new Date(a[1].date) : new Date(0);
@@ -176,6 +236,7 @@ export default function FileExplorer({
                   onOpenFile={handleOpenFile}
                   onNavigateDenied={() => setShowPermissionModal(true)}
                   onShowContextMenu={handleShowContextMenu}
+                  level={0}
                 />
               ))}
           </div>
