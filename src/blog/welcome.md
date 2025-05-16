@@ -4,7 +4,7 @@ date: "2025-5-15"
 ---
 # 👋 Welcome to OS25!
 
-Welcome to my portfolio — a fully interactive, linux themed operating system built for exploration, education, and a bit of fun.
+This is my portfolio project — a fully interactive, linux themed operating system built for exploration, education, and a bit of fun!
 
 This project is part of my journey as a cybersecurity professional and full-stack developer. I’ve designed it to feel like a custom Linux OS:
 - 🖥️ Launch terminal simulations
@@ -16,8 +16,8 @@ This project is part of my journey as a cybersecurity professional and full-stac
 
 ## 💡 What You'll Find Here
 
-- **Tools & Projects:** React, Supabase, Tailwind, Linux emulation, and more
-- **Writeups & Tips:** Notes from hacking competitions, blue team work, and secure coding
+- **Tools & Projects:** React, Tailwind, Linux emulation, and more
+- **Writeups & Tips:** Notes from CTF competitions, blue team work, and coding
 
 ---
 
@@ -29,4 +29,4 @@ More content is coming soon — this is just the beginning.
 
 Thanks for visiting!
 
-*— Robert*
+*— Robert H*
