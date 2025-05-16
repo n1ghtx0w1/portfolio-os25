@@ -12,10 +12,14 @@ This interactive experience launches with a bootloader screen, drops users into 
 - ✅ Terminal-style login shell (`guest@os25:~$`)
 - ✅ Custom commands like `start`, `help`, `whoami`, and more
 - ✅ Transition into a full desktop UI
-- ✅ Start menu with app launcher and external links
-- ✅ Terminal icon to return to command view
-- ✅ Clock and volume slider (functional)
-- ✅ Rounded, blurred taskbar with icon-based start button
+- ✅ Start menu with external links and file explorer
+- ✅ File Explorer with full Linux-style virtual file system
+- ✅ Markdown support: `.md` files render inside a styled reader
+- ✅ Blog system: folder loads markdown posts from `/src/content/blog`
+- ✅ Desktop folder shortcut to open blog directly
+- ✅ Folder and file icons for consistent UI across terminal and desktop
+- ✅ Clock and volume slider in the taskbar
+- ✅ Responsive, rounded, blurred taskbar with custom start button
 - ✅ About window with profile image and bio text
 
 ---
@@ -33,15 +37,15 @@ This interactive experience launches with a bootloader screen, drops users into 
 ## 📁 Project Structure
 ```
 portfolio-os25/
-├── public/                 # Static files (icons, backgrounds)
-│   └── icons/              # Terminal SVG, etc.
+├── public/                 
+│   └── icons/              # Folder and terminal icons
 ├── src/
-│   ├── components/         # Terminal.jsx, BootScreen.jsx, Desktop.jsx
+│   ├── components/         # Terminal, Desktop, FileExplorer, Viewers
+│   ├── content/
+│   │   └── blog/           # Markdown blog posts (auto-loaded)
+│   ├── data/               # Virtual file system and loaders
 │   ├── App.jsx             # Routing logic
 │   └── main.jsx            # React entry point
-├── .gitignore
-├── index.html
-├── package.json
 └── README.md
 ```
 
@@ -69,5 +73,5 @@ exit	Logs out or exits terminal mode
 Coming soon...
 
 📜 License
-MIT © 2024 Robert Head (n1ghtx0w1)
+MIT © 2024 Robert (n1ghtx0w1)
 ---

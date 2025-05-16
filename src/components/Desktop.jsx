@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 import AboutWindow from './AboutWindow';
+import FileExplorer from './FileExplorer';
+import KateViewer from './TextViewer';
+import MarkdownViewer from './MarkdownViewer';
+import { fileSystem } from '../data/fileSystem';
+import { loadBlogFiles } from '../data/loadBlogFiles';
+import ExploitModal from './ExploitModal';
 
 export default function Desktop({ onExit }) {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
@@ -8,7 +14,33 @@ export default function Desktop({ onExit }) {
   const [showVolume, setShowVolume] = useState(false);
   const [volume, setVolume] = useState(50);
   const [showAbout, setShowAbout] = useState(false);
+  const [showFiles, setShowFiles] = useState(false);
+  const [openTextFile, setOpenTextFile] = useState(null);
+  const [textFileContent, setTextFileContent] = useState('');
+  const [openMarkdownFile, setOpenMarkdownFile] = useState(null);
+  const [markdownContent, setMarkdownContent] = useState('');
+  const [startPath, setStartPath] = useState('/');
+  const [showExploit, setShowExploit] = useState(false);
 
+  // Handle file opening from File Explorer
+  const handleOpenFile = (path, content) => {
+    const ext = path.split('.').pop();
+    const filename = path.split('/').pop();
+if (ext === 'sh') {
+  setShowExploit(true);
+} else if (ext === 'txt') {
+  setOpenTextFile(filename);
+  setTextFileContent(content);
+} else if (ext === 'md') {
+  setOpenMarkdownFile(filename);
+  setMarkdownContent(content);
+}
+
+
+
+  };
+
+  // Clock timer
   useEffect(() => {
     const interval = setInterval(() => {
       setTime(new Date().toLocaleTimeString());
@@ -16,6 +48,7 @@ export default function Desktop({ onExit }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-close menus when clicking off
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -27,9 +60,18 @@ export default function Desktop({ onExit }) {
         setShowVolume(false);
       }
     }
-
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  // Load blog .md files into the virtual file system
+  useEffect(() => {
+    loadBlogFiles().then((blogPosts) => {
+      if (!fileSystem['/'].home.guest.blog) {
+        fileSystem['/'].home.guest.blog = {};
+      }
+      fileSystem['/'].home.guest.blog = blogPosts;
+    });
   }, []);
 
   if (launchingTerminal) {
@@ -42,15 +84,26 @@ export default function Desktop({ onExit }) {
 
   return (
     <div className="relative w-screen h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white overflow-hidden">
+      
+      {/* Blog Folder Shortcut */}
+    <div
+      className="absolute top-24 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
+      onClick={() => {
+      setStartPath('/home/guest/blog');
+      setShowFiles(true);
+    }}
+    >
+    <img src="/icons/folder-icon.png" alt="Blog Folder" className="w-12 h-12" />
+      <span className="text-xs mt-1 text-center">Blog</span>
+    </div>
 
-      {/* Clickable Terminal Icon */}
+
+      {/* Terminal Icon */}
       <div
         className="absolute top-6 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
         onClick={() => {
           setLaunchingTerminal(true);
-          setTimeout(() => {
-            onExit(); // exits to terminal view
-          }, 1000); // 1 second fake loading
+          setTimeout(() => onExit(), 1000);
         }}
       >
         <img src="/icons/terminal-icon.svg" alt="Terminal" className="w-12 h-12" />
@@ -62,6 +115,8 @@ export default function Desktop({ onExit }) {
         <div className="absolute bottom-12 left-4 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg text-sm z-50 start-menu">
           <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={onExit}>🖥 Terminal</div>
           <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={() => setShowAbout(true)}>👤 About</div>
+          <div className="p-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2" onClick={() => { setStartPath('/'); setShowFiles(true); }} >
+          <img src="/icons/folder-icon.png" alt="Files" className="w-4 h-4" /> Files </div>
           <a
             href="https://github.com/n1ghtx0w1"
             target="_blank"
@@ -74,28 +129,42 @@ export default function Desktop({ onExit }) {
         </div>
       )}
 
-      {/* About Window (outside start menu) */}
+      {/* App Windows */}
       {showAbout && <AboutWindow onClose={() => setShowAbout(false)} />}
+      {showFiles && (
+        <FileExplorer
+          onClose={() => setShowFiles(false)}
+          onOpenFile={handleOpenFile}
+          startPath={startPath}
+        />
+      )}
+      {openTextFile && (
+        <KateViewer
+          filename={openTextFile}
+          content={textFileContent}
+          onClose={() => setOpenTextFile(null)}
+        />
+      )}
+      {openMarkdownFile && (
+        <MarkdownViewer
+          filename={openMarkdownFile}
+          content={markdownContent}
+          onClose={() => setOpenMarkdownFile(null)}
+        />
+      )}
+
+      {showExploit && <ExploitModal onComplete={onExit} />}
+
 
       {/* Taskbar */}
-      <div className="absolute bottom-0 w-full h-12 px-4 flex justify-between items-center
-        bg-black/60 backdrop-blur-md border-t border-gray-700 rounded-t-xl shadow-md z-50">
-        
-        {/* Start Button */}
+      <div className="absolute bottom-0 w-full h-12 px-4 flex justify-between items-center bg-black/60 backdrop-blur-md border-t border-gray-700 rounded-t-xl shadow-md z-50">
         <div
           onClick={() => setShowStartMenu((prev) => !prev)}
           className="start-button cursor-pointer p-1 rounded focus:outline-none"
         >
-          <img
-            src="/icons/menu-button.png"
-            alt="Start"
-            className="w-8 h-8 object-contain"
-          />
+          <img src="/icons/menu-button.png" alt="Start" className="w-8 h-8 object-contain" />
         </div>
-
-        {/* Right-aligned Volume + Time */}
         <div className="flex items-center gap-4">
-          {/* Volume */}
           <div className="relative volume-control">
             <button
               onClick={() => setShowVolume((prev) => !prev)}
@@ -103,7 +172,6 @@ export default function Desktop({ onExit }) {
             >
               🔊
             </button>
-
             {showVolume && (
               <div className="absolute bottom-10 right-0 w-32 bg-gray-800 p-2 rounded shadow border border-gray-700">
                 <input
@@ -114,14 +182,10 @@ export default function Desktop({ onExit }) {
                   onChange={(e) => setVolume(parseInt(e.target.value))}
                   className="w-full"
                 />
-                <div className="text-xs text-center text-gray-300 mt-1">
-                  {volume}%
-                </div>
+                <div className="text-xs text-center text-gray-300 mt-1">{volume}%</div>
               </div>
             )}
           </div>
-
-          {/* Clock */}
           <div className="text-sm text-gray-300">{time}</div>
         </div>
       </div>
