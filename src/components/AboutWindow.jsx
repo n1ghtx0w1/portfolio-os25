@@ -1,7 +1,7 @@
 import profileImg from '../assets/images/profile1.jpg';
 import { Rnd } from "react-rnd";
 
-export default function AboutWindow({ onClose }) {
+export default function AboutWindow({ onClose, onShowAchievements }) {
   const isMobile = window.innerWidth < 640;
 
   return (
@@ -50,15 +50,20 @@ export default function AboutWindow({ onClose }) {
                 eMASS, ServiceNow, VSCode, Ansible, Git, JavaScript, React, Supabase, MySQL, NoSQL, Tailwind, 
                 Postman, Docker, Linux, Windows, IOS, Android, PFSense, Burp, Wireshark, Metasploit, 
                 BloodHound, Mimikatz, and more.</p>
-
-                
-              {/* LinkedIn Button */}
-              <div className="mt-6 text-center">
+              <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
+                <button
+                  onClick={() => { onShowAchievements(); }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded bg-green-700 hover:bg-green-800 text-white font-medium transition justify-center"
+                  title="View Achievements, Awards, & Certificates"
+                >
+                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="inline-block"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17.75l-6.16 3.24 1.18-6.88L2 9.75l6.92-1.01L12 2.25l3.08 6.49 6.92 1.01-5.02 4.36 1.18 6.88z" /></svg>
+                  Achievements
+                </button>
                 <a
                   href="https://www.linkedin.com/in/robert-head-0x0"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded bg-blue-700 hover:bg-blue-800 text-white font-medium transition"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded bg-blue-700 hover:bg-blue-800 text-white font-medium transition justify-center"
                   title="Connect on LinkedIn"
                 >
                   <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" className="inline-block" aria-hidden="true">
@@ -70,7 +75,6 @@ export default function AboutWindow({ onClose }) {
             </div>
           </div>
         </div>
-        
       </Rnd>
     </div>
   );

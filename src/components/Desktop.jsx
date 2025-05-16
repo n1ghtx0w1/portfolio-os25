@@ -6,6 +6,7 @@ import MarkdownViewer from './MarkdownViewer';
 import { fileSystem as initialFileSystem } from '../data/fileSystem';
 import { loadBlogFiles } from '../data/loadBlogFiles';
 import ExploitModal from './ExploitModal';
+import achievementsMd from '../content/achievements.md?raw';
 
 export default function Desktop({ onExit }) {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
@@ -23,6 +24,8 @@ export default function Desktop({ onExit }) {
   const [showExploit, setShowExploit] = useState(false);
   const [showRickrollIcon, setShowRickrollIcon] = useState(false);
   const [vfs, setVfs] = useState(() => structuredClone(initialFileSystem));
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [achievementsContent, setAchievementsContent] = useState('');
 
   // Handle file opening from File Explorer
   const handleOpenFile = (path, content) => {
@@ -65,19 +68,17 @@ export default function Desktop({ onExit }) {
   }, []);
 
   // Load blog .md files into the virtual file system
-useEffect(() => {
-  loadBlogFiles().then((blogPosts) => {
-    console.log("🟢 blogPosts from loader", blogPosts);
-    setVfs(prev => {
-      const next = structuredClone(prev);
-      if (!next['/'].home) next['/'].home = {};
-      if (!next['/'].home.guest) next['/'].home.guest = {};
-      next['/'].home.guest.blog = blogPosts;
-      return next;
+  useEffect(() => {
+    loadBlogFiles().then((blogPosts) => {
+      setVfs(prev => {
+        const next = structuredClone(prev);
+        if (!next['/'].home) next['/'].home = {};
+        if (!next['/'].home.guest) next['/'].home.guest = {};
+        next['/'].home.guest.blog = blogPosts;
+        return next;
+      });
     });
-  });
-}, []);
-
+  }, []);
 
   // Show Rickroll browser icon after exploit
   useEffect(() => {
@@ -85,6 +86,11 @@ useEffect(() => {
       setShowRickrollIcon(true);
     }
   }, []);
+
+  const handleShowAchievements = () => {
+    setAchievementsContent(achievementsMd);
+    setShowAchievements(true);
+  };
 
   if (launchingTerminal) {
     return (
@@ -95,10 +101,10 @@ useEffect(() => {
   }
 
   return (
-  <div
-    className="relative w-screen h-screen text-white overflow-hidden bg-cover bg-center"
-    style={{ backgroundImage: "url('/images/desktop-background.png')" }}
-  >    
+    <div
+      className="relative w-screen h-screen text-white overflow-hidden bg-cover bg-center"
+      style={{ backgroundImage: "url('/images/desktop-background.png')" }}
+    >
       {/* Blog Folder Shortcut */}
       <div
         className="absolute top-24 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
@@ -139,7 +145,7 @@ useEffect(() => {
         <div className="absolute bottom-12 left-4 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg text-sm z-50 start-menu">
           <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={onExit}>🖥 Terminal</div>
           <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={() => setShowAbout(true)}>👤 About</div>
-          <div className="p-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2" onClick={() => { setStartPath('/'); setShowFiles(true); }} >
+          <div className="p-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2" onClick={() => { setStartPath('/'); setShowFiles(true); }}>
             <img src="/icons/folder-icon.png" alt="Files" className="w-4 h-4" /> Files
           </div>
           <a
@@ -155,7 +161,13 @@ useEffect(() => {
       )}
 
       {/* App Windows */}
-      {showAbout && <AboutWindow onClose={() => setShowAbout(false)} />}
+      {showAbout && (
+        <AboutWindow
+          onClose={() => setShowAbout(false)}
+          onShowAchievements={handleShowAchievements}
+        />
+      )}
+
       {showFiles && (
         <FileExplorer
           fileSystem={vfs}
@@ -172,11 +184,20 @@ useEffect(() => {
           onClose={() => setOpenTextFile(null)}
         />
       )}
+
       {openMarkdownFile && (
         <MarkdownViewer
           filename={openMarkdownFile}
           content={markdownContent}
           onClose={() => setOpenMarkdownFile(null)}
+        />
+      )}
+
+      {showAchievements && (
+        <MarkdownViewer
+          filename="achievements.md"
+          content={achievementsContent}
+          onClose={() => setShowAchievements(false)}
         />
       )}
 
