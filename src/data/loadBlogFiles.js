@@ -1,27 +1,20 @@
 import { Buffer } from 'buffer';
 globalThis.Buffer = Buffer;
-
 import matter from 'gray-matter';
 
 export async function loadBlogFiles() {
-  const files = import.meta.glob('../blog/*.md?raw', {
-    eager: true,
-  });
-
-  console.log("✅ Glob matched files:", Object.keys(files));
-
+  const files = import.meta.glob('/src/blog/*.md', {
+  eager: true,
+  query: '?raw',
+});
   const posts = [];
-
   for (const path in files) {
-    const raw = files[path];
-    if (typeof raw !== 'string') {
-      console.error("❌ Expected string, got:", raw);
-      continue;
-    }
-
+    let raw = files[path];
+    if (typeof raw === 'object' && raw.default) raw = raw.default;
+    if (typeof raw !== 'string') continue;
     const { content, data } = matter(raw);
-    const filename = path.split('/').pop();
 
+    const filename = path.split('/').pop();
     posts.push({
       filename,
       content,

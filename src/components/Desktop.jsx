@@ -3,7 +3,7 @@ import AboutWindow from './AboutWindow';
 import FileExplorer from './FileExplorer';
 import KateViewer from './TextViewer';
 import MarkdownViewer from './MarkdownViewer';
-import { fileSystem } from '../data/fileSystem';
+import { fileSystem as initialFileSystem } from '../data/fileSystem';
 import { loadBlogFiles } from '../data/loadBlogFiles';
 import ExploitModal from './ExploitModal';
 
@@ -22,6 +22,7 @@ export default function Desktop({ onExit }) {
   const [startPath, setStartPath] = useState('/');
   const [showExploit, setShowExploit] = useState(false);
   const [showRickrollIcon, setShowRickrollIcon] = useState(false);
+  const [vfs, setVfs] = useState(() => structuredClone(initialFileSystem));
 
   // Handle file opening from File Explorer
   const handleOpenFile = (path, content) => {
@@ -64,14 +65,19 @@ export default function Desktop({ onExit }) {
   }, []);
 
   // Load blog .md files into the virtual file system
-  useEffect(() => {
-loadBlogFiles().then((blogPosts) => {
-  if (!fileSystem['/'].home) fileSystem['/'].home = {};
-  if (!fileSystem['/'].home.guest) fileSystem['/'].home.guest = {};
-  fileSystem['/'].home.guest.blog = blogPosts;
-});
+useEffect(() => {
+  loadBlogFiles().then((blogPosts) => {
+    console.log("🟢 blogPosts from loader", blogPosts);
+    setVfs(prev => {
+      const next = structuredClone(prev);
+      if (!next['/'].home) next['/'].home = {};
+      if (!next['/'].home.guest) next['/'].home.guest = {};
+      next['/'].home.guest.blog = blogPosts;
+      return next;
+    });
+  });
+}, []);
 
-  }, []);
 
   // Show Rickroll browser icon after exploit
   useEffect(() => {
@@ -152,11 +158,13 @@ loadBlogFiles().then((blogPosts) => {
       {showAbout && <AboutWindow onClose={() => setShowAbout(false)} />}
       {showFiles && (
         <FileExplorer
+          fileSystem={vfs}
           onClose={() => setShowFiles(false)}
           onOpenFile={handleOpenFile}
           startPath={startPath}
         />
       )}
+
       {openTextFile && (
         <KateViewer
           filename={openTextFile}
