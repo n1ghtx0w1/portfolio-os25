@@ -5,22 +5,22 @@
 ## 🎓 Professional Certifications
 
 - **LPI Linux Essentials (2024)**  
-  ![LPI Linux Essentials+](public\certificates\lpi_linux.png)
+  ![LPI Linux Essentials+](/certificates/lpi_linux.png)
 
 - **CompTIA Secure Infrastructure Specialist – CSIS Stackable Certification(2024)**  
-  ![CompTIA Secure Infrastructure Specialist](public\certificates\CompTIA_CSIS.png)
+  ![CompTIA Secure Infrastructure Specialist](/certificates/CompTIA_CSIS.png)
 
 - **CompTIA Security+ (2024)**  
-  ![CompTIA Security+ Certificate](public\certificates\sec_plus.png)
+  ![CompTIA Security+ Certificate](/certificates/sec_plus.png)
 
 - **CompTIA IT Operations Specialist – CIOS Stackable Certification(2024)**  
-  ![CompTIA IT Operations Specialist](public\certificates\op_specialist_cios.png)
+  ![CompTIA IT Operations Specialist](/certificates/op_specialist_cios.png)
 
 - **CompTIA Network+ ce Certification(2024)**  
-  ![CompTIA Network+](public\certificates\net_plus.png)
+  ![CompTIA Network+](/certificates/net_plus.png)
 
 - **CompTIA A+ ce Certification(2022)**  
-  ![CompTIA A+](public\certificates\a_plus.png)
+  ![CompTIA A+](/certificates/a_plus.png)
 
 ---
 
