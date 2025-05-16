@@ -5,7 +5,10 @@ export const fileSystem = {
         documents: {
           "readme.txt": "Welcome to OS25!",
         },
-        blog: {} // blog files will be injected here
+        blog: {
+          // blog files are injected at runtime as:
+          // "filename.md": { content: "...", title: "...", date: Date }
+        },
       },
     },
     tmp: {

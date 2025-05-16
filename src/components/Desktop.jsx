@@ -65,12 +65,12 @@ export default function Desktop({ onExit }) {
 
   // Load blog .md files into the virtual file system
   useEffect(() => {
-    loadBlogFiles().then((blogPosts) => {
-      if (!fileSystem['/'].home.guest.blog) {
-        fileSystem['/'].home.guest.blog = {};
-      }
-      fileSystem['/'].home.guest.blog = blogPosts;
-    });
+loadBlogFiles().then((blogPosts) => {
+  if (!fileSystem['/'].home) fileSystem['/'].home = {};
+  if (!fileSystem['/'].home.guest) fileSystem['/'].home.guest = {};
+  fileSystem['/'].home.guest.blog = blogPosts;
+});
+
   }, []);
 
   // Show Rickroll browser icon after exploit

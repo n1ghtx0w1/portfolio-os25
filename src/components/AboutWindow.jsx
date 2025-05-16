@@ -34,16 +34,21 @@ export default function AboutWindow({ onClose }) {
 
             <div>
               <p className="text-sm mb-3">
-                Hi, I’m <strong>Robert</strong>, Lorem ipsum dolor sit amet, consectetur adipiscing 
-                elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                Hi, I’m <strong>Robert</strong>, and I'm a BSCIA student at Western Governors 
+                University. I'm a line of duty injured / retired police officer who has transitioned to tech.
+                I've worked for global technology companies building major incident management programs 
+                and in cyber security. I love web dev as a hobby and participating in CTF competitions.
               </p>
 
               <p className="text-sm mb-3">
-                My skills include consequat. Duis aute irure dolor in reprehenderit in voluptate 
-                velit esse cillum dolore eu fugiat nulla pariatur.
+                My skills include full stack web dev (Javascript, Html, CSS, Python, SQL, NoSQL, GO,
+                middleware, and various different frameworks associated with front end languages).
+                I'm experienced with ITL, business of IT, all major cloud platforms, project management, program development,
+                DevOps, cyber security (Sec+ Certified), risk management, and more.
               </p>
 
-              <p className="text-sm">🛠 Tools I work with: React, Supabase, Tailwind, Linux, Burp, Wireshark</p>
+              <p className="text-sm">🛠 Tools I work with: JavaScript, React, Supabase, MySQL, Tailwind, Postman,
+                Linux, Windows, IOS, Android, Burp, Wireshark, Metasploit, BloodHound, Mimikatz, and more.</p>
             </div>
           </div>
         </div>

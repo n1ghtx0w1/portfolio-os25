@@ -1,4 +1,7 @@
-
+---
+title: "Welcome"
+date: "2024-11-01"
+---
 # 👋 Welcome to OS25!
 
 Welcome to my portfolio — a fully interactive, linux themed operating system built for exploration, education, and a bit of fun.

@@ -47,7 +47,7 @@ function FileNode({
   onNavigateDenied,
   onShowContextMenu,
 }) {
-  const isFolder = typeof content === "object";
+  const isFolder = typeof content === "object" && !content.content;
   const [expanded, setExpanded] = useState(false);
 
   const handleClick = () => {
@@ -58,7 +58,7 @@ function FileNode({
       }
       setExpanded(!expanded);
     } else {
-      onOpenFile(path);
+      onOpenFile(path, content.content || content);
     }
   };
 
@@ -72,34 +72,47 @@ function FileNode({
   return (
     <div className="ml-4">
       <div
-        className="cursor-pointer hover:bg-white/10 rounded px-1 py-0.5"
+        className="cursor-pointer hover:bg-white/10 rounded px-1 py-0.5 flex justify-between items-center"
         onClick={handleClick}
         onContextMenu={handleRightClick}
       >
-        {isFolder ? (
-          <img
-            src="/icons/folder-icon.png"
-            alt="Folder"
-            className="inline-block w-4 h-4 mr-1"
-          />
-        ) : (
-          "📄"
-        )}{" "}
-        {name}
+        <div className="flex-1">
+          {isFolder ? (
+            <img
+              src="/icons/folder-icon.png"
+              alt="Folder"
+              className="inline-block w-4 h-4 mr-1"
+            />
+          ) : (
+            "📄"
+          )}{" "}
+          {content?.title || name}
+        </div>
+        {content?.date && (
+          <div className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+            {new Date(content.date).toLocaleDateString()}
+          </div>
+        )}
       </div>
       {isFolder && expanded && (
         <div className="pl-2">
-          {Object.entries(content).map(([childName, childContent]) => (
-            <FileNode
-              key={childName}
-              name={childName}
-              content={childContent}
-              path={joinPath(path, childName)}
-              onOpenFile={onOpenFile}
-              onNavigateDenied={onNavigateDenied}
-              onShowContextMenu={onShowContextMenu}
-            />
-          ))}
+          {Object.entries(content)
+            .sort((a, b) => {
+              const aDate = a[1]?.date ? new Date(a[1].date) : new Date(0);
+              const bDate = b[1]?.date ? new Date(b[1].date) : new Date(0);
+              return bDate - aDate;
+            })
+            .map(([childName, childContent]) => (
+              <FileNode
+                key={childName}
+                name={childName}
+                content={childContent}
+                path={joinPath(path, childName)}
+                onOpenFile={onOpenFile}
+                onNavigateDenied={onNavigateDenied}
+                onShowContextMenu={onShowContextMenu}
+              />
+            ))}
         </div>
       )}
     </div>
@@ -123,21 +136,8 @@ export default function FileExplorer({ onClose, onOpenFile, startPath = "/" }) {
     filePath: null,
   });
 
-  const handleOpenFile = (filePath) => {
-    const parts = filePath.split("/").filter(Boolean);
-    let current = fileSystem["/"];
-
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (!current[parts[i]]) return;
-      current = current[parts[i]];
-    }
-
-    const fileName = parts[parts.length - 1];
-    const fileContent = current[fileName];
-
-    if (fileContent) {
-      onOpenFile(filePath, fileContent);
-    }
+  const handleOpenFile = (filePath, content) => {
+    onOpenFile(filePath, content);
   };
 
   const handleDeleteExploit = () => {
@@ -188,17 +188,23 @@ export default function FileExplorer({ onClose, onOpenFile, startPath = "/" }) {
             </button>
           </div>
           <div className="p-3 text-sm font-mono overflow-auto flex-1">
-            {Object.entries(current).map(([name, content]) => (
-              <FileNode
-                key={name}
-                name={name}
-                content={content}
-                path={joinPath(startPath, name)}
-                onOpenFile={handleOpenFile}
-                onNavigateDenied={() => setShowPermissionModal(true)}
-                onShowContextMenu={handleShowContextMenu}
-              />
-            ))}
+            {Object.entries(current)
+              .sort((a, b) => {
+                const aDate = a[1]?.date ? new Date(a[1].date) : new Date(0);
+                const bDate = b[1]?.date ? new Date(b[1].date) : new Date(0);
+                return bDate - aDate;
+              })
+              .map(([name, content]) => (
+                <FileNode
+                  key={name}
+                  name={name}
+                  content={content}
+                  path={joinPath(startPath, name)}
+                  onOpenFile={handleOpenFile}
+                  onNavigateDenied={() => setShowPermissionModal(true)}
+                  onShowContextMenu={handleShowContextMenu}
+                />
+              ))}
           </div>
         </div>
       </Rnd>

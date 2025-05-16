@@ -15,7 +15,7 @@ This interactive experience launches with a bootloader screen, drops users into 
 - ✅ Start menu with external links and file explorer
 - ✅ File Explorer with full Linux-style virtual file system
 - ✅ Markdown support: `.md` files render inside a styled reader
-- ✅ Blog system: folder loads markdown posts from `/src/content/blog`
+- ✅ Blog system: auto-loads `.md` posts from `/src/blog`, sorted by date with title and preview image support
 - ✅ Desktop folder shortcut to open blog directly
 - ✅ Folder and file icons for consistent UI across terminal and desktop
 - ✅ Clock and volume slider in the taskbar
@@ -41,13 +41,30 @@ portfolio-os25/
 │   └── icons/              # Folder and terminal icons
 ├── src/
 │   ├── components/         # Terminal, Desktop, FileExplorer, Viewers
-│   ├── content/
-│   │   └── blog/           # Markdown blog posts (auto-loaded)
+│   │── blog/               # Markdown blog posts (auto-loaded from frontmatter)
 │   ├── data/               # Virtual file system and loaders
 │   ├── App.jsx             # Routing logic
 │   └── main.jsx            # React entry point
 └── README.md
 ```
+
+---
+
+## 📝 Writing Blog Posts
+
+To add a new blog post, create a `.md` file inside `/src/blog/` with the following structure:
+
+```md
+---
+title: "My Latest Blog Post"
+date: "2025-05-17"
+---
+
+![Header Image](/images/my-header.png)
+
+# Welcome!
+
+This is a sample blog post that supports titles, dates, and header images.
 
 ---
 
@@ -69,8 +86,11 @@ motd	Shows message of the day
 clear	Clears the screen
 exit	Logs out or exits terminal mode
 
-🌐 Demo
-Coming soon...
+---
+
+🌐 **Live Demo:** [https://www.headsec.blog](https://www.headsec.blog)
+
+---
 
 📜 Credits & Attribution
 I appreciate the amazing creative work of these artists and sources that made OS25 feel truly immersive:
