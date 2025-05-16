@@ -27,6 +27,7 @@
 ## 🥇 CTF Awards
 
 - **NCL Diamond Spring 2025 Individual Game** – 85th Percentile Overall
+  ![NCL Diamond](/certificates/ncl-diamond.png)
 - **TryHackMe, 2022** – Top 1%
 - **HackTheBox, 2019** - Hacker Rank
 
