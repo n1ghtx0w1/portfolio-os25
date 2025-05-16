@@ -4,6 +4,12 @@
 
 This interactive experience launches with a bootloader screen, drops users into a fake Linux terminal, and allows them to transition into a desktop UI with a taskbar, terminal icon, and start menu.
 
+![Bootloader](/images/bootloader-image.png)
+
+![Terminal](/images/terminal-image.png)
+
+![Desktop](/images/desktop-image.png)
+
 ---
 
 ## 🎮 Live Features
@@ -21,6 +27,7 @@ This interactive experience launches with a bootloader screen, drops users into 
 - ✅ Clock and volume slider in the taskbar
 - ✅ Responsive, rounded, blurred taskbar with custom start button
 - ✅ About window with profile image and bio text
+- ✅ Achievements & Awards modal: Accessible from the About window, displays certificates and CTF awards from markdown, with images served from `/public/certificates/`
 
 ---
 
@@ -39,6 +46,7 @@ This interactive experience launches with a bootloader screen, drops users into 
 portfolio-os25/
 ├── public/                 
 │   └── icons/              # Folder and terminal icons
+│   └── certificates/       # Award & certificate images (for achievements modal)
 ├── src/
 │   ├── components/         # Terminal, Desktop, FileExplorer, Viewers
 │   │── blog/               # Markdown blog posts (auto-loaded from frontmatter)
@@ -59,12 +67,16 @@ To add a new blog post, create a `.md` file inside `/src/blog/` with the followi
 title: "My Latest Blog Post"
 date: "2025-05-17"
 ---
+```
+---
 
-![Header Image](/images/my-header.png)
+## 🏆 Adding Certificates & Awards
 
-# Welcome!
+To display certificates/awards in the Achievements modal:
 
-This is a sample blog post that supports titles, dates, and header images.
+1. Place your `.jpg` or `.png` images in `/public/certificates/`
+2. Reference them in your markdown as:
+*Do not include `/public` in the path!*
 
 ---
 
