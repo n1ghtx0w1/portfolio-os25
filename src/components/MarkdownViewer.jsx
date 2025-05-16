@@ -8,15 +8,16 @@ export default function MarkdownViewer({ filename, content, onClose }) {
   return (
     <Rnd
       default={{
-        x: 140,
-        y: 140,
-        width: 600,
-        height: 400,
+        x: 20,
+        y: 20,
+        width: window.innerWidth < 640 ? window.innerWidth * 0.9 : 600,
+        height: window.innerHeight < 640 ? window.innerHeight * 0.6 : 400,
       }}
-      minWidth={300}
+      minWidth={280}
       minHeight={200}
       bounds="window"
       dragHandleClassName="md-header"
+      disableDragging={window.innerWidth < 640}
       className="z-50 border border-gray-700 rounded-md overflow-hidden shadow-lg"
     >
       <div className="bg-gray-900 text-white flex flex-col h-full">

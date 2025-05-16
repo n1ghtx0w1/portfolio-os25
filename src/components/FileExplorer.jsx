@@ -116,7 +116,6 @@ export default function FileExplorer({ onClose, onOpenFile, startPath = "/" }) {
 
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [showThanksModal, setShowThanksModal] = useState(false);
-
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -163,15 +162,16 @@ export default function FileExplorer({ onClose, onOpenFile, startPath = "/" }) {
     <>
       <Rnd
         default={{
-          x: 100,
-          y: 100,
-          width: 400,
-          height: 400,
+          x: 20,
+          y: 20,
+          width: window.innerWidth < 640 ? window.innerWidth * 0.9 : 500,
+          height: window.innerHeight < 640 ? window.innerHeight * 0.6 : 400,
         }}
-        minWidth={300}
+        minWidth={280}
         minHeight={200}
         bounds="window"
         dragHandleClassName="window-header"
+        disableDragging={window.innerWidth < 640}
         className="z-50 border border-gray-700 rounded-md overflow-hidden shadow-lg"
       >
         <div

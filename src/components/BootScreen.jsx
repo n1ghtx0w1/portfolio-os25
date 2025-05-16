@@ -73,9 +73,9 @@ export default function BootScreen({ onComplete }) {
   const indexRef = useRef(0);
   const timeoutRef = useRef(null);
   const bootComplete = useRef(false);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
-    // Reset all refs when component (re)mounts
     indexRef.current = 0;
     bootComplete.current = false;
     setLines([]);
@@ -114,10 +114,14 @@ export default function BootScreen({ onComplete }) {
     };
   }, [onComplete]);
 
-  const renderBootLine = (line, i) => {
-    if (!line || typeof line !== 'string') {
-      return <div key={i} className="text-white">&nbsp;</div>;
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+  }, [lines]);
+
+  const renderBootLine = (line, i) => {
+    if (!line || typeof line !== 'string') return <div key={i}>&nbsp;</div>;
 
     if (line.startsWith('[ OK ]')) {
       return (
@@ -150,13 +154,25 @@ export default function BootScreen({ onComplete }) {
   };
 
   return (
-    <div className="bg-black text-sm h-screen overflow-auto font-mono p-4 flex flex-col">
-      <pre className="text-white mb-4 whitespace-pre leading-tight font-mono text-sm">
+    <div
+      className="fixed inset-0 bg-black text-sm font-mono flex flex-col"
+      style={{ height: '100vh', width: '100vw', overflow: 'hidden' }}
+    >
+      <pre className="text-white mb-4 whitespace-pre leading-tight font-mono text-sm px-4 pt-4">
         {banner}
       </pre>
-      <div className="text-gray-500 text-xs italic mb-2">(Press Enter to skip boot...)</div>
-      <div className="text-green-400">
-        {lines.map((line, i) => renderBootLine(line, i))}
+      <div className="text-gray-500 text-xs italic mb-2 px-4">(Press Enter to skip boot...)</div>
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-4 pb-4"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+        }}
+      >
+        <div className="text-green-400">
+          {lines.map((line, i) => renderBootLine(line, i))}
+        </div>
       </div>
     </div>
   );

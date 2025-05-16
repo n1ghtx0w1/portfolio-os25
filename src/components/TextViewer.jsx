@@ -4,15 +4,16 @@ export default function KateViewer({ filename, content, onClose }) {
   return (
     <Rnd
       default={{
-        x: 120,
-        y: 120,
-        width: 600,
-        height: 400,
+        x: 20,
+        y: 20,
+        width: window.innerWidth < 640 ? window.innerWidth * 0.9 : 600,
+        height: window.innerHeight < 640 ? window.innerHeight * 0.6 : 400,
       }}
-      minWidth={300}
+      minWidth={280}
       minHeight={200}
       bounds="window"
       dragHandleClassName="kate-header"
+      disableDragging={window.innerWidth < 640}
       className="z-50 border border-blue-600 rounded-md overflow-hidden shadow-lg"
     >
       <div className="bg-gray-900 text-white flex flex-col h-full font-mono">
@@ -26,9 +27,6 @@ export default function KateViewer({ filename, content, onClose }) {
             ✖
           </button>
         </div>
-
-        {/* Toolbar (optional) Here */}
-
 
         {/* Text area */}
         <textarea
