@@ -4,11 +4,11 @@
 
 This interactive experience launches with a bootloader screen, drops users into a fake Linux terminal, and allows them to transition into a desktop UI with a taskbar, terminal icon, and start menu.
 
-![Bootloader](/images/bootloader-image.png)
+![Bootloader](/public/images/bootloader-image.png)
 
-![Terminal](/images/terminal-image.png)
+![Terminal](/public/images/terminal-image.png)
 
-![Desktop](/images/desktop-image.png)
+![Desktop](/public/images/desktop-image.png)
 
 ---
 
