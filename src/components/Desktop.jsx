@@ -89,8 +89,10 @@ export default function Desktop({ onExit }) {
   }
 
   return (
-    <div className="relative w-screen h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white overflow-hidden">
-      
+  <div
+    className="relative w-screen h-screen text-white overflow-hidden bg-cover bg-center"
+    style={{ backgroundImage: "url('/images/desktop-background.png')" }}
+  >    
       {/* Blog Folder Shortcut */}
       <div
         className="absolute top-24 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
@@ -122,7 +124,7 @@ export default function Desktop({ onExit }) {
           setTimeout(() => onExit(), 1000);
         }}
       >
-        <img src="/icons/terminal-icon.svg" alt="Terminal" className="w-12 h-12" />
+        <img src="/icons/terminal-icon.png" alt="Terminal" className="w-12 h-12" />
         <span className="text-xs mt-1 text-center">Terminal</span>
       </div>
 

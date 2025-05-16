@@ -72,6 +72,23 @@ exit	Logs out or exits terminal mode
 🌐 Demo
 Coming soon...
 
+📜 Credits & Attribution
+I appreciate the amazing creative work of these artists and sources that made OS25 feel truly immersive:
+
+📁 Folder Icon: SVGRepo - Files Folder
+Licensed and hosted via SVGRepo.
+
+🖥 Terminal Icon: Icons8 - Terminal Icons
+Free for personal/non-commercial use with attribution.
+
+🌌 Desktop Background: Wallpaper by vexel78 on Wallhaven
+Visit their profile for more amazing artwork.
+
+🎵 Rickroll Video: “Never Gonna Give You Up” by Rick Astley on YouTube
+Copyright belongs to the original artist and label.
+
+🙏 Thank you to all the creators above!
+
 📜 License
 MIT © 2024 Robert (n1ghtx0w1)
 ---
