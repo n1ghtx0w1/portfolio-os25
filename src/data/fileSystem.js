@@ -1,3 +1,4 @@
+// fileSystem.js
 export const fileSystem = {
   "/": {
     home: {
@@ -36,5 +37,6 @@ sleep 1😈"
       "diary.md": "# Private\nToday I launched OS25. No one knows yet...",
     },
     opt: {},
+    trash: {},
   },
 };

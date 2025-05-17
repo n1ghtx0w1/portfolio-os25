@@ -24,15 +24,13 @@ function PermissionDeniedModal({ onClose }) {
   );
 }
 
-function ThankYouModal({ onClose }) {
+function ThankYouModal({ onClose, message = "You removed a malicious file from the OS!" }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
       <div className="bg-gray-900 text-white rounded-lg p-6 w-[90vw] max-w-xs mx-auto text-center shadow-lg border border-green-500">
         <div className="text-3xl mb-2">👍</div>
         <h2 className="text-lg font-bold mb-2">Thank You</h2>
-        <p className="mb-4 text-sm">
-          You removed a malicious file from the OS!
-        </p>
+        <p className="mb-4 text-sm">{message}</p>
         <button
           className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm"
           onClick={onClose}
@@ -44,6 +42,7 @@ function ThankYouModal({ onClose }) {
   );
 }
 
+// Moved FileNode here for closure (this is a functional component!)
 function FileNode({
   name,
   content,
@@ -53,11 +52,11 @@ function FileNode({
   onShowContextMenu,
   level = 0,
 }) {
-  const isFolder = typeof content === "object" && !content.content;
+  const isFolder = typeof content === "object" && !content.content && !content.fileType;
   const [expanded, setExpanded] = useState(false);
 
   // Check for folder restriction
-  const isRestricted = !(path.startsWith("/home") || path.startsWith("/tmp"));
+  const isRestricted = !(path.startsWith("/home") || path.startsWith("/tmp") || path.startsWith("/trash"));
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -72,13 +71,13 @@ function FileNode({
     }
   };
 
-  const handleRightClick = (e) => {
-    if (name === "exploit.sh") {
-      e.preventDefault();
-      onShowContextMenu(e.clientX, e.clientY, path);
-    }
-  };
-
+const handleRightClick = (e) => {
+  const isInTrash = path.startsWith("/trash");
+  if (!isFolder || isInTrash) {
+    e.preventDefault();
+    onShowContextMenu(e.clientX, e.clientY, path, content);
+  }
+};
   // Responsive indent: less left margin on mobile
   const indentClass =
     level === 0
@@ -146,7 +145,33 @@ export default function FileExplorer({
   onClose,
   onOpenFile,
   startPath = "/",
+  setVfs,
+  setDesktopIcons,
+  getDesktopIconConfig,
+  iconContext,
 }) {
+  if (!fileSystem || typeof fileSystem !== "object" || !fileSystem["/"]) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center">
+        <div className="text-red-400 bg-gray-900 p-6 rounded-xl border border-red-700 shadow-lg text-lg">
+          <div className="text-4xl mb-4">🚫</div>
+          <div>
+            <b>File system error:</b> Root directory <code>"/"</code> not found.
+          </div>
+          <div className="mt-2 text-gray-400 text-base">
+            (This is a developer bug. Check your <code>fileSystem</code> structure!)
+          </div>
+          <button
+            onClick={onClose}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const parts = startPath.split("/").filter(Boolean);
   let current = fileSystem["/"];
   for (let part of parts) {
@@ -156,29 +181,110 @@ export default function FileExplorer({
 
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [showThanksModal, setShowThanksModal] = useState(false);
+  const [thanksMessage, setThanksMessage] = useState("");
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
     y: 0,
     filePath: null,
+    fileContent: null,
   });
 
   const handleOpenFile = (filePath, content) => {
     onOpenFile(filePath, content);
   };
 
-  const handleDeleteExploit = () => {
+  // Remove from /trash
+  const handleDeleteFile = () => {
     const path = contextMenu.filePath;
     const parts = path.split("/").filter(Boolean);
-    if (parts.length === 2 && parts[0] === "tmp" && parts[1] === "exploit.sh") {
-      delete fileSystem["/"].tmp["exploit.sh"];
+
+    // Don't allow deleting from /trash!
+    if (parts[0] === "trash") {
+      setThanksMessage("File is already in the Trash!");
       setShowThanksModal(true);
+      setContextMenu({ ...contextMenu, visible: false });
+      return;
+    }
+
+    // Find parent folder
+    let parent = fileSystem["/"];
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!parent[parts[i]]) return;
+      parent = parent[parts[i]];
+    }
+    const filename = parts[parts.length - 1];
+
+    if (parent[filename]) {
+      if (!fileSystem["/"].trash) fileSystem["/"].trash = {};
+      fileSystem["/"].trash[filename] = {
+        ...parent[filename],
+        __trashedFrom: "/" + parts.slice(0, -1).join("/"),
+      };
+      delete parent[filename];
+      setThanksMessage("File moved to Trash!");
+      setShowThanksModal(true);
+      if (setVfs) setVfs(structuredClone(fileSystem));
     }
     setContextMenu({ ...contextMenu, visible: false });
   };
 
-  const handleShowContextMenu = (x, y, filePath) => {
-    setContextMenu({ visible: true, x, y, filePath });
+  // RESTORE handler for desktop icons
+  const handleRestoreDesktopIcon = () => {
+    const key = contextMenu.filePath.split("/").pop();
+    const fileObj = fileSystem["/"].trash[key];
+    if (
+      fileObj &&
+      fileObj.fileType === "desktop-icon" &&
+      setDesktopIcons &&
+      getDesktopIconConfig &&
+      iconContext
+    ) {
+      delete fileSystem["/"].trash[key];
+      if (setVfs) setVfs(structuredClone(fileSystem));
+      setDesktopIcons((icons) => [
+        ...icons.filter((i) => i.id !== fileObj.id),
+        {
+          id: fileObj.id,
+          name: fileObj.name,
+          icon: fileObj.icon,
+          ...getDesktopIconConfig(fileObj.id, iconContext),
+        },
+      ]);
+    }
+    setContextMenu({ ...contextMenu, visible: false });
+  };
+
+  // RESTORE handler for all other files (not desktop icons)
+    const handleRestoreFile = () => {
+    const key = contextMenu.filePath.split("/").pop();
+    const fileObj = fileSystem["/"].trash[key];
+    if (fileObj && fileObj.__trashedFrom) {
+      // Parse original path
+    const originalPath = fileObj.__trashedFrom.replace(/^\//, '').split('/');
+    let parent = fileSystem["/"];
+    for (let part of originalPath) {
+      if (!parent[part]) parent[part] = {}; 
+      parent = parent[part];
+    }
+    parent[key] = { ...fileObj };
+    delete parent[key].__trashedFrom;
+    delete parent[key].fileType;
+    delete fileSystem["/"].trash[key];
+    if (setVfs) setVfs(structuredClone(fileSystem));
+  }
+    setContextMenu({ ...contextMenu, visible: false });
+};
+
+  // Right-click handler for context menu
+  const handleShowContextMenu = (x, y, filePath, fileContent) => {
+    setContextMenu({
+      visible: true,
+      x,
+      y,
+      filePath,
+      fileContent,
+    });
   };
 
   const handleCloseContextMenu = () => {
@@ -189,6 +295,18 @@ export default function FileExplorer({
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
   const width = isMobile ? window.innerWidth * 0.98 : 500;
   const height = isMobile ? window.innerHeight * 0.7 : 400;
+
+  // Detect if right-clicked item is a trashed desktop icon
+  const isRestoreDesktopIcon =
+    startPath === "/trash" &&
+    contextMenu.fileContent &&
+    contextMenu.fileContent.fileType === "desktop-icon";
+
+  // Detect if restoring a normal file from trash
+  const isRestoreFile =
+    startPath === "/trash" &&
+    contextMenu.fileContent &&
+    contextMenu.fileContent.fileType !== "desktop-icon";
 
   return (
     <>
@@ -243,30 +361,51 @@ export default function FileExplorer({
         </div>
       </Rnd>
 
+      {/* Context menu for files and desktop icons */}
       {contextMenu.visible && (
         <div
           className="fixed z-50 bg-gray-800 text-white text-sm border border-gray-600 rounded shadow"
           style={{
             top: contextMenu.y,
             left: contextMenu.x,
-            width: "140px",
+            width: "160px",
           }}
         >
-          <div
-            className="px-3 py-2 hover:bg-red-600 cursor-pointer"
-            onClick={handleDeleteExploit}
-          >
-            🗑 Delete
-          </div>
+          {startPath === "/trash" ? (
+            isRestoreDesktopIcon ? (
+              <div
+                className="px-3 py-2 hover:bg-gray-700 cursor-pointer transition"
+                onClick={handleRestoreDesktopIcon}
+              >
+                ♻️ Restore to Desktop
+              </div>
+            ) : isRestoreFile ? (
+              <div
+                className="px-3 py-2 hover:bg-gray-700 cursor-pointer transition"
+                onClick={handleRestoreFile}
+              >
+                ♻️ Restore File
+              </div>
+            ) : null
+          ) : (
+            <div
+              className="px-3 py-2 hover:bg-gray-700 cursor-pointer transition"
+              onClick={handleDeleteFile}
+            >
+              🗑 Delete
+            </div>
+          )}
         </div>
       )}
 
       {showPermissionModal && (
         <PermissionDeniedModal onClose={() => setShowPermissionModal(false)} />
       )}
-
       {showThanksModal && (
-        <ThankYouModal onClose={() => setShowThanksModal(false)} />
+        <ThankYouModal
+          onClose={() => setShowThanksModal(false)}
+          message={thanksMessage}
+        />
       )}
     </>
   );

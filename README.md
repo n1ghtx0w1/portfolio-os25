@@ -12,6 +12,16 @@ This interactive experience launches with a bootloader screen, drops users into 
 
 ---
 
+## 📝 Changelog
+
+**Recent Updates**
+- Added drag-and-drop support for desktop icons to Trash
+- Trash bin now supports restoring files and desktop icons
+- Fixed cross-platform file path logic for certificates and awards images
+- Enhanced right-click context menus for Trash/Restore actions
+
+---
+
 ## 🎮 Live Features
 
 - ✅ Boot screen with animated service logs (Press `Enter` to skip)
@@ -28,6 +38,9 @@ This interactive experience launches with a bootloader screen, drops users into 
 - ✅ Responsive, rounded, blurred taskbar with custom start button
 - ✅ About window with profile image and bio text
 - ✅ Achievements & Awards modal: Accessible from the About window, displays certificates and CTF awards from markdown, with images served from `/public/certificates/`
+- ✅ Drag and drop: Desktop icons can be dragged onto the Trash bin to remove them from the desktop.
+- ✅ Trash & Restore: Deleted files and desktop icons are moved to the Trash. Items in the Trash can be restored to their original locations with a right-click.
+- Restoring files with the same name will overwrite the original (future versions may prompt for conflicts).
 
 ---
 

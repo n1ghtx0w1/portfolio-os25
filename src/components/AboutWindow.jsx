@@ -42,7 +42,7 @@ export default function AboutWindow({ onClose, onShowAchievements }) {
 
               <p className="text-sm mb-3">
                 🔐 My skills & experience include: crisis management / major incident management, root cause analysis,
-                full stack development, networking, DevOps, cloud environments (Oracle, Amazon, GCC), project management, 
+                full stack development, networking, DevOps, cloud environments (Oracle Gov, Amazon GCC, Google GCP), project management, 
                 and cyber security / risk management.
               </p>
 

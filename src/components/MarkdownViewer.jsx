@@ -5,7 +5,7 @@ import rehypeRaw from "rehype-raw";
 
 export default function MarkdownViewer({ filename, content, onClose }) {
   return (
-    <div className="fixed inset-0 bg-gray-900 text-white z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-gray-900 text-white z-[9999] overflow-y-auto">
       <div className="flex justify-between items-center bg-gray-800 px-4 py-3 border-b border-gray-700">
         <span className="text-lg font-bold">{filename}</span>
         <button

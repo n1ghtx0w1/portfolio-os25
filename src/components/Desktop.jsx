@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import AboutWindow from './AboutWindow';
 import FileExplorer from './FileExplorer';
 import KateViewer from './TextViewer';
@@ -7,6 +7,43 @@ import { fileSystem as initialFileSystem } from '../data/fileSystem';
 import { loadBlogFiles } from '../data/loadBlogFiles';
 import ExploitModal from './ExploitModal';
 import achievementsMd from '../content/achievements.md?raw';
+
+function getDesktopIconConfig(id, context) {
+  switch (id) {
+    case "trash":
+      return {
+        onClick: () => {
+          context.setStartPath('/trash');
+          context.setShowFiles(true);
+        },
+        trashable: false,
+      };
+    case "terminal":
+      return {
+        onClick: () => {
+          context.setLaunchingTerminal(true);
+          setTimeout(() => context.onExit(), 1000);
+        },
+        trashable: true,
+      };
+    case "blog":
+      return {
+        onClick: () => {
+          context.setStartPath('/home/guest/blog');
+          context.setShowFiles(true);
+        },
+        trashable: true,
+      };
+    case "browser":
+      return {
+        onClick: () =>
+          window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank'),
+        trashable: true,
+      };
+    default:
+      return { onClick: () => {}, trashable: false };
+  }
+}
 
 export default function Desktop({ onExit }) {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
@@ -26,8 +63,112 @@ export default function Desktop({ onExit }) {
   const [vfs, setVfs] = useState(() => structuredClone(initialFileSystem));
   const [showAchievements, setShowAchievements] = useState(false);
   const [achievementsContent, setAchievementsContent] = useState('');
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, iconId: null });
+  const [draggedIconId, setDraggedIconId] = useState(null);
+  const [isTrashOver, setIsTrashOver] = useState(false);
 
-  // Handle file opening from File Explorer
+  // Default icon array builder
+  const getDefaultIcons = useCallback(
+    () => [
+      {
+        id: "trash",
+        name: "Trash",
+        icon: "/icons/trashbin.png",
+        trashable: false,
+      },
+      {
+        id: "terminal",
+        name: "Terminal",
+        icon: "/icons/terminal-icon.png",
+        trashable: true,
+      },
+      {
+        id: "blog",
+        name: "Blog",
+        icon: "/icons/folder-icon.png",
+        trashable: true,
+      },
+      {
+        id: "browser",
+        name: "Browser",
+        icon: "/icons/browser-icon.png",
+        trashable: true,
+        visible: showRickrollIcon,
+      },
+    ],
+    [showRickrollIcon]
+  );
+
+  const [desktopIcons, setDesktopIcons] = useState(() =>
+    getDefaultIcons().filter(icon => icon.id !== 'browser')
+  );
+
+  // Sync browser icon with Rickroll state
+  useEffect(() => {
+    setDesktopIcons(prev => {
+      const wanted = getDefaultIcons().filter(
+        icon => icon.id !== 'browser' || showRickrollIcon
+      );
+      return wanted.filter(icon => prev.some(i => i.id === icon.id) || icon.id === 'browser');
+    });
+  }, [showRickrollIcon, getDefaultIcons]);
+
+  // Context menu handlers (unchanged)
+  const handleIconContextMenu = (e, icon) => {
+    e.preventDefault();
+    if (!icon.trashable) return;
+    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, iconId: icon.id });
+  };
+
+  const handleTrashIcon = () => {
+    moveIconToTrash(contextMenu.iconId);
+    setContextMenu({ ...contextMenu, visible: false });
+  };
+
+  const handleCloseContextMenu = () => setContextMenu({ ...contextMenu, visible: false });
+
+  // New: Move Icon to Trash (shared by drag and context menu)
+  const moveIconToTrash = (iconId) => {
+    const icon = desktopIcons.find(i => i.id === iconId);
+    if (!icon) return;
+    setDesktopIcons(icons => icons.filter(i => i.id !== icon.id));
+    setVfs(vfs => {
+      const next = structuredClone(vfs);
+      next['/'].trash = next['/'].trash || {};
+      let trashKey = `desktop-${icon.id}`;
+      let count = 1;
+      while (next['/'].trash[trashKey]) {
+        trashKey = `desktop-${icon.id}-${count++}`;
+      }
+      const { onClick, ...iconWithoutOnClick } = icon;
+      next['/'].trash[trashKey] = {
+        ...iconWithoutOnClick,
+        __trashedFrom: "desktop",
+        fileType: "desktop-icon"
+      };
+      return next;
+    });
+  };
+
+  // Drag & Drop handlers for icons
+  const handleDragStart = (iconId) => setDraggedIconId(iconId);
+  const handleDragEnd = () => setDraggedIconId(null);
+
+  // Trash drop logic
+  const handleTrashDragOver = (e) => {
+    e.preventDefault();
+    setIsTrashOver(true);
+  };
+  const handleTrashDragLeave = () => setIsTrashOver(false);
+  const handleTrashDrop = (e) => {
+    e.preventDefault();
+    setIsTrashOver(false);
+    if (draggedIconId) {
+      moveIconToTrash(draggedIconId);
+      setDraggedIconId(null);
+    }
+  };
+
   const handleOpenFile = (path, content) => {
     const ext = path.split('.').pop();
     const filename = path.split('/').pop();
@@ -51,7 +192,7 @@ export default function Desktop({ onExit }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-close menus when clicking off
+  // Auto-close menus
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -61,11 +202,12 @@ export default function Desktop({ onExit }) {
       ) {
         setShowStartMenu(false);
         setShowVolume(false);
+        setContextMenu({ ...contextMenu, visible: false });
       }
     }
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
+  }, [contextMenu]);
 
   // Load blog .md files into the virtual file system
   useEffect(() => {
@@ -80,7 +222,6 @@ export default function Desktop({ onExit }) {
     });
   }, []);
 
-  // Show Rickroll browser icon after exploit
   useEffect(() => {
     if (localStorage.getItem('ranExploit') === 'true') {
       setShowRickrollIcon(true);
@@ -100,45 +241,68 @@ export default function Desktop({ onExit }) {
     );
   }
 
+  // ----------- Desktop Rendering -----------
+
+  const iconContext = {
+    setStartPath,
+    setShowFiles,
+    setLaunchingTerminal,
+    onExit,
+    setShowRickrollIcon,
+  };
+
   return (
     <div
       className="relative w-screen h-screen text-white overflow-hidden bg-cover bg-center"
       style={{ backgroundImage: "url('/images/desktop-background.png')" }}
     >
-      {/* Blog Folder Shortcut */}
-      <div
-        className="absolute top-24 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
-        onClick={() => {
-          setStartPath('/home/guest/blog');
-          setShowFiles(true);
-        }}
-      >
-        <img src="/icons/folder-icon.png" alt="Blog Folder" className="w-12 h-12" />
-        <span className="text-xs mt-1 text-center">Blog</span>
-      </div>
+      {/* Desktop Icons */}
+      {desktopIcons
+        .filter(icon => icon.id !== 'browser' || showRickrollIcon)
+        .map((icon, idx) => {
+          const iconConfig = getDesktopIconConfig(icon.id, iconContext);
+          const isTrash = icon.id === 'trash';
+          return (
+            <div
+              key={icon.id}
+              className="absolute left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
 
-      {/* Rickroll Browser Icon */}
-      {showRickrollIcon && (
+              style={{ top: `${6 + idx * 72}px` }}
+              onClick={iconConfig.onClick}
+              onContextMenu={e => handleIconContextMenu(e, { ...icon, ...iconConfig })}
+              // Only trash icon is a drop target:
+              {...(isTrash
+                ? {
+                    onDragOver: handleTrashDragOver,
+                    onDrop: handleTrashDrop,
+                    onDragLeave: handleTrashDragLeave,
+                  }
+                : {
+                    draggable: icon.trashable,
+                    onDragStart: () => handleDragStart(icon.id),
+                    onDragEnd: handleDragEnd,
+                  })}
+            >
+              <img src={icon.icon} alt={icon.name} className="w-12 h-12" />
+              <span className="text-xs mt-1 text-center">{icon.name}</span>
+            </div>
+          );
+        })}
+
+      {/* Context Menu for Desktop Icon */}
+      {contextMenu.visible && (
         <div
-          className="absolute top-44 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
-          onClick={() => window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')}
+          className="fixed z-50 bg-gray-800 text-white text-sm border border-gray-600 rounded shadow"
+          style={{
+            top: contextMenu.y,
+            left: contextMenu.x,
+            width: "140px",
+          }}
+          onClick={handleTrashIcon}
         >
-          <img src="/icons/browser-icon.png" alt="Browser" className="w-12 h-12" />
-          <span className="text-xs mt-1 text-center">Browser</span>
+          <div className="px-3 py-2 hover:bg-red-600 cursor-pointer">🗑 Move to Trash</div>
         </div>
       )}
-
-      {/* Terminal Icon */}
-      <div
-        className="absolute top-6 left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
-        onClick={() => {
-          setLaunchingTerminal(true);
-          setTimeout(() => onExit(), 1000);
-        }}
-      >
-        <img src="/icons/terminal-icon.png" alt="Terminal" className="w-12 h-12" />
-        <span className="text-xs mt-1 text-center">Terminal</span>
-      </div>
 
       {/* Start Menu */}
       {showStartMenu && (
@@ -174,6 +338,10 @@ export default function Desktop({ onExit }) {
           onClose={() => setShowFiles(false)}
           onOpenFile={handleOpenFile}
           startPath={startPath}
+          setVfs={setVfs}
+          setDesktopIcons={setDesktopIcons}
+          getDesktopIconConfig={getDesktopIconConfig}
+          iconContext={iconContext}
         />
       )}
 
