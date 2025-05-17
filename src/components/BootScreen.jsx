@@ -167,16 +167,30 @@ return (
   <div
     ref={scrollRef}
     className="fixed inset-0 bg-black text-sm font-mono overflow-y-auto"
-    style={{ height: '100vh', width: '100vw', scrollbarWidth: 'none', msOverflowStyle: 'none' }}  >
-    onClick={handleTouchOrClick}
-    onTouchStart={handleTouchOrClick}
+    style={{ height: '100vh', width: '100vw', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+  >
     <pre className="text-white mb-4 whitespace-pre leading-tight font-mono text-sm px-4 pt-4">
       {banner}
     </pre>
-    <div className="text-gray-500 text-xs italic mb-2 px-4">(Press Enter to skip boot...)</div>
+    <div className="text-gray-500 text-xs italic mb-2 px-4">(Press Enter or tap anywhere to skip boot...)</div>
     <div className="text-green-400 px-4 pb-4">
       {lines.map((line, i) => renderBootLine(line, i))}
     </div>
+    {/* FULLSCREEN OVERLAY */}
+    {!bootComplete.current && (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 100,
+          background: 'transparent',
+          cursor: 'pointer',
+        }}
+        onClick={handleTouchOrClick}
+        onPointerDown={handleTouchOrClick}
+        onTouchStart={handleTouchOrClick}
+      />
+    )}
   </div>
 );
 

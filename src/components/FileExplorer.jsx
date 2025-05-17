@@ -117,9 +117,10 @@ function FileNode({
 
   const handleTouchStart = (e) => {
     e.stopPropagation();
+    e.preventDefault(); // <- try adding this here!
     touchTimeout.current = setTimeout(() => {
       handleLongPress(e);
-    }, 800); // 800ms for iOS/Android reliability
+    }, 800);
   };
 
   const handleTouchEnd = () => clearTimeout(touchTimeout.current);
@@ -141,6 +142,7 @@ function FileNode({
           userSelect: "none",
           WebkitUserSelect: "none",
           touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent"
         }}
         onClick={handleClick}
         onContextMenu={handleRightClick}
