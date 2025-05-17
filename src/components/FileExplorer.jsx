@@ -4,8 +4,6 @@ import { useRef } from "react";
 
 // ...inside FileNode...
 
-const touchTimeout = useRef();
-
 const handleTouchStart = (e) => {
   touchTimeout.current = setTimeout(() => {
     if (
@@ -82,7 +80,7 @@ function FileNode({
 }) {
   const isFolder = typeof content === "object" && !content.content && !content.fileType;
   const [expanded, setExpanded] = useState(false);
-  
+  const touchTimeout = useRef();
 
   // Restrict guest user from certain folders
   const isRestricted = !(path.startsWith("/home") || path.startsWith("/tmp") || path.startsWith("/trash") || path.startsWith("/quarantine"));
