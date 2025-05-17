@@ -253,46 +253,54 @@ export default function FileExplorer({
     onOpenFile(filePath, content);
   };
 
-  // Move file to Trash
-  const handleDeleteFile = () => {
-    const path = contextMenu.filePath;
-    const parts = path.split("/").filter(Boolean);
+    // Move file to Trash
+    const handleDeleteFile = () => {
+  const path = contextMenu.filePath;
+  const parts = path.split("/").filter(Boolean);
 
-    // Don't allow deleting from /trash or /quarantine!
-    if (parts[0] === "trash" || parts[0] === "quarantine") {
-      setThanksMessage("This file cannot be deleted from here!");
-      setShowThanksModal(true);
-      setContextMenu({ ...contextMenu, visible: false });
-      return;
-    }
-
-    // Special: Quarantine workflow for exploit.sh
-    if (path === "/tmp/exploit.sh") {
-      handleQuarantineFile();
-      return;
-    }
-
-    // Find parent folder
-    let parent = fileSystem["/"];
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (!parent[parts[i]]) return;
-      parent = parent[parts[i]];
-    }
-    const filename = parts[parts.length - 1];
-
-    if (parent[filename]) {
-      if (!fileSystem["/"].trash) fileSystem["/"].trash = {};
-      fileSystem["/"].trash[filename] = {
-        ...parent[filename],
-        __trashedFrom: "/" + parts.slice(0, -1).join("/"),
-      };
-      delete parent[filename];
-      setThanksMessage("File moved to Trash!");
-      setShowThanksModal(true);
-      if (setVfs) setVfs(structuredClone(fileSystem));
-    }
+  // Don't allow deleting from /trash or /quarantine!
+  if (parts[0] === "trash" || parts[0] === "quarantine") {
+    setShowPermissionModal(true);
     setContextMenu({ ...contextMenu, visible: false });
-  };
+    return;
+  }
+
+  // Don't allow deleting folders (only allow files)
+  let parent = fileSystem["/"];
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (!parent[parts[i]]) return;
+    parent = parent[parts[i]];
+  }
+  const filename = parts[parts.length - 1];
+  const target = parent[filename];
+
+  // Check if target is a folder
+  const isFolder = typeof target === "object" && !target.content && !target.fileType;
+  if (isFolder) {
+    setShowPermissionModal(true);
+    setContextMenu({ ...contextMenu, visible: false });
+    return;
+  }
+
+  // Special: Quarantine workflow for exploit.sh
+  if (path === "/tmp/exploit.sh") {
+    handleQuarantineFile();
+    return;
+  }
+
+  if (parent[filename]) {
+    if (!fileSystem["/"].trash) fileSystem["/"].trash = {};
+    fileSystem["/"].trash[filename] = {
+      ...parent[filename],
+      __trashedFrom: "/" + parts.slice(0, -1).join("/"),
+    };
+    delete parent[filename];
+    setThanksMessage("File moved to Trash!");
+    setShowThanksModal(true);
+    if (setVfs) setVfs(structuredClone(fileSystem));
+  }
+  setContextMenu({ ...contextMenu, visible: false });
+};
 
   // Quarantine handler for exploit.sh
   const handleQuarantineFile = () => {
@@ -463,48 +471,58 @@ export default function FileExplorer({
         </div>
       </Rnd>
 
-      {/* Context menu for files and desktop icons */}
+            {/* Context menu for files and desktop icons */}
       {contextMenu.visible && (
-        <div
-          className="fixed z-50 bg-gray-800 text-white text-sm border border-gray-600 rounded shadow"
-          style={{
-            top: contextMenu.y,
-            left: contextMenu.x,
-            width: "180px",
-          }}
-        >
-          {startPath === "/trash" ? (
-            isRestoreDesktopIcon ? (
+        <>
+          {/* Fullscreen invisible backdrop to close context menu on outside click */}
+          <div
+            className="fixed inset-0 z-40"
+            style={{ background: "transparent" }}
+            onClick={handleCloseContextMenu}
+          />
+          {/* The actual context menu */}
+          <div
+            className="fixed z-50 bg-gray-800 text-white text-sm border border-gray-600 rounded shadow"
+            style={{
+              top: contextMenu.y,
+              left: contextMenu.x,
+              width: "180px",
+            }}
+            onClick={e => e.stopPropagation()} // Prevent closing when clicking inside
+          >
+            {startPath === "/trash" ? (
+              isRestoreDesktopIcon ? (
+                <div
+                  className="px-3 py-2 hover:bg-gray-700 cursor-pointer transition"
+                  onClick={handleRestoreDesktopIcon}
+                >
+                  ♻️ Restore to Desktop
+                </div>
+              ) : isRestoreFile ? (
+                <div
+                  className="px-3 py-2 hover:bg-gray-700 cursor-pointer transition"
+                  onClick={handleRestoreFile}
+                >
+                  ♻️ Restore File
+                </div>
+              ) : null
+            ) : isQuarantineAction ? (
+              <div
+                className="px-3 py-2 hover:bg-green-700 cursor-pointer transition"
+                onClick={handleQuarantineFile}
+              >
+                🦠 Quarantine
+              </div>
+            ) : (
               <div
                 className="px-3 py-2 hover:bg-gray-700 cursor-pointer transition"
-                onClick={handleRestoreDesktopIcon}
+                onClick={handleDeleteFile}
               >
-                ♻️ Restore to Desktop
+                🗑 Delete
               </div>
-            ) : isRestoreFile ? (
-              <div
-                className="px-3 py-2 hover:bg-gray-700 cursor-pointer transition"
-                onClick={handleRestoreFile}
-              >
-                ♻️ Restore File
-              </div>
-            ) : null
-          ) : isQuarantineAction ? (
-            <div
-              className="px-3 py-2 hover:bg-green-700 cursor-pointer transition"
-              onClick={handleQuarantineFile}
-            >
-              🦠 Quarantine
-            </div>
-          ) : (
-            <div
-              className="px-3 py-2 hover:bg-gray-700 cursor-pointer transition"
-              onClick={handleDeleteFile}
-            >
-              🗑 Delete
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </>
       )}
 
       {showPermissionModal && (
@@ -519,3 +537,4 @@ export default function FileExplorer({
     </>
   );
 }
+
