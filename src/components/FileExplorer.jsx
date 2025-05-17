@@ -1,5 +1,32 @@
 import { useState } from "react";
 import { Rnd } from "react-rnd";
+import { useRef } from "react"; 
+
+// ...inside FileNode...
+
+const touchTimeout = useRef();
+
+const handleTouchStart = (e) => {
+  touchTimeout.current = setTimeout(() => {
+    if (
+      !isFolder ||
+      path.startsWith("/trash") ||
+      path.startsWith("/quarantine") ||
+      path === "/tmp/exploit.sh"
+    ) {
+      e.preventDefault?.();
+      onShowContextMenu(
+        e.touches ? e.touches[0].clientX : e.clientX,
+        e.touches ? e.touches[0].clientY : e.clientY,
+        path,
+        content
+      );
+    }
+  }, 500);
+};
+
+const handleTouchEnd = () => clearTimeout(touchTimeout.current);
+
 
 const joinPath = (...segments) =>
   segments.join("/").replace(/\/+/g, "/").replace(/\/$/, "");
@@ -100,33 +127,37 @@ function FileNode({
 
   return (
     <div className={indentClass}>
-      <div
-        className={`flex items-center px-1 py-1 rounded cursor-pointer select-none hover:bg-white/10`}
-        style={{
-          fontWeight: isFolder ? 600 : 400,
-          fontSize: "1rem",
-          gap: 4,
-        }}
-        onClick={handleClick}
-        onContextMenu={handleRightClick}
-      >
-        {isFolder ? (
-          <img
-            src="/icons/folder-icon.png"
-            alt="Folder"
-            className="inline-block w-4 h-4 mr-1"
-            draggable={false}
-          />
-        ) : (
-          "📄"
-        )}
-        <span className="truncate">{content?.title || name}</span>
-        {content?.date && (
-          <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
-            {new Date(content.date).toLocaleDateString()}
-          </span>
-        )}
-      </div>
+    <div
+      className={`flex items-center px-1 py-1 rounded cursor-pointer select-none hover:bg-white/10`}
+      style={{
+      fontWeight: isFolder ? 600 : 400,
+      fontSize: "1rem",
+      gap: 4,
+    }}
+      onClick={handleClick}
+      onContextMenu={handleRightClick}
+      onTouchStart={isMobile ? handleTouchStart : undefined}
+      onTouchEnd={isMobile ? handleTouchEnd : undefined}
+      onTouchCancel={isMobile ? handleTouchEnd : undefined}
+    >
+  {isFolder ? (
+    <img
+      src="/icons/folder-icon.png"
+      alt="Folder"
+      className="inline-block w-4 h-4 mr-1"
+      draggable={false}
+    />
+  ) : (
+    "📄"
+  )}
+  <span className="truncate">{content?.title || name}</span>
+  {content?.date && (
+    <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+      {new Date(content.date).toLocaleDateString()}
+    </span>
+  )}
+</div>
+
       {/* Render folder children if expanded and allowed */}
       {isFolder && expanded && !isRestricted && (
         <div>
