@@ -160,28 +160,29 @@ function FileNode({
 
       {/* Render folder children if expanded and allowed */}
       {isFolder && expanded && !isRestricted && (
-        <div>
-          {Object.entries(content)
-            .sort((a, b) => {
-              const aDate = a[1]?.date ? new Date(a[1].date) : new Date(0);
-              const bDate = b[1]?.date ? new Date(b[1].date) : new Date(0);
-              return bDate - aDate;
-            })
-            .map(([childName, childContent]) => (
-              <FileNode
-                key={name}
-                name={name}
-                content={content}
-                path={joinPath(startPath, name)}
-                onOpenFile={handleOpenFile}
-                onNavigateDenied={() => setShowPermissionModal(true)}
-                onShowContextMenu={handleShowContextMenu}
-                level={0}
-                isMobile={isMobile}
-              />
-            ))}
-        </div>
-      )}
+  <div>
+    {Object.entries(content)
+      .sort((a, b) => {
+        const aDate = a[1]?.date ? new Date(a[1].date) : new Date(0);
+        const bDate = b[1]?.date ? new Date(b[1].date) : new Date(0);
+        return bDate - aDate;
+      })
+      .map(([childName, childContent]) => (
+        <FileNode
+          key={childName}
+          name={childName}
+          content={childContent}
+          path={joinPath(path, childName)}
+          onOpenFile={onOpenFile}
+          onNavigateDenied={onNavigateDenied}
+          onShowContextMenu={onShowContextMenu}
+          level={level + 1}
+          isMobile={isMobile}
+        />
+      ))}
+  </div>
+)}
+
     </div>
   );
 }
