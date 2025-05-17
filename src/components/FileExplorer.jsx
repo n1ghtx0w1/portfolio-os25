@@ -78,9 +78,11 @@ function FileNode({
   onNavigateDenied,
   onShowContextMenu,
   level = 0,
+  isMobile,
 }) {
   const isFolder = typeof content === "object" && !content.content && !content.fileType;
   const [expanded, setExpanded] = useState(false);
+  
 
   // Restrict guest user from certain folders
   const isRestricted = !(path.startsWith("/home") || path.startsWith("/tmp") || path.startsWith("/trash") || path.startsWith("/quarantine"));
@@ -169,14 +171,15 @@ function FileNode({
             })
             .map(([childName, childContent]) => (
               <FileNode
-                key={childName}
-                name={childName}
-                content={childContent}
-                path={joinPath(path, childName)}
-                onOpenFile={onOpenFile}
-                onNavigateDenied={onNavigateDenied}
-                onShowContextMenu={onShowContextMenu}
-                level={level + 1}
+                key={name}
+                name={name}
+                content={content}
+                path={joinPath(startPath, name)}
+                onOpenFile={handleOpenFile}
+                onNavigateDenied={() => setShowPermissionModal(true)}
+                onShowContextMenu={handleShowContextMenu}
+                level={0}
+                isMobile={isMobile}
               />
             ))}
         </div>
@@ -442,6 +445,7 @@ export default function FileExplorer({
                   onNavigateDenied={() => setShowPermissionModal(true)}
                   onShowContextMenu={handleShowContextMenu}
                   level={0}
+                  isMobile={isMobile}
                 />
               ))}
           </div>
