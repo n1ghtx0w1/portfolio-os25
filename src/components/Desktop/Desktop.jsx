@@ -1,12 +1,17 @@
-import { useEffect, useState, useCallback } from 'react';
-import AboutWindow from './AboutWindow';
-import FileExplorer from './FileExplorer';
-import KateViewer from './TextViewer';
-import MarkdownViewer from './MarkdownViewer';
-import { fileSystem as initialFileSystem } from '../data/fileSystem';
-import { loadBlogFiles } from '../data/loadBlogFiles';
-import ExploitModal from './ExploitModal';
-import achievementsMd from '../content/achievements.md?raw';
+import { useEffect, useState, useCallback } from "react";
+import AboutWindow from "../AboutWindow";
+import FileExplorer from "../FileExplorer/FileExplorer";
+import KateViewer from "../TextViewer";
+import MarkdownViewer from "../MarkdownViewer";
+import { fileSystem as initialFileSystem } from "../../data/fileSystem";
+import { loadBlogFiles } from "../../data/loadBlogFiles";
+import ExploitModal from "../ExploitModal";
+import achievementsMd from "../../content/achievements.md?raw";
+import ContextMenu from '../ContextMenu';
+
+import DesktopIcon from './DesktopIcon';
+import Taskbar from './Taskbar';
+import StartMenu from './StartMenu';
 
 function getDesktopIconConfig(id, context) {
   switch (id) {
@@ -113,7 +118,7 @@ export default function Desktop({ onExit }) {
     });
   }, [showRickrollIcon, getDefaultIcons]);
 
-  // Context menu handlers (unchanged)
+  // Context menu handlers
   const handleIconContextMenu = (e, icon) => {
     e.preventDefault();
     if (!icon.trashable) return;
@@ -127,7 +132,7 @@ export default function Desktop({ onExit }) {
 
   const handleCloseContextMenu = () => setContextMenu({ ...contextMenu, visible: false });
 
-  // New: Move Icon to Trash (shared by drag and context menu)
+  // Move Icon to Trash (shared by drag and context menu)
   const moveIconToTrash = (iconId) => {
     const icon = desktopIcons.find(i => i.id === iconId);
     if (!icon) return;
@@ -263,65 +268,46 @@ export default function Desktop({ onExit }) {
           const iconConfig = getDesktopIconConfig(icon.id, iconContext);
           const isTrash = icon.id === 'trash';
           return (
-            <div
+            <DesktopIcon
               key={icon.id}
-              className="absolute left-6 flex flex-col items-center cursor-pointer hover:opacity-90"
-
-              style={{ top: `${6 + idx * 72}px` }}
+              icon={icon}
+              iconConfig={iconConfig}
+              index={idx}
               onClick={iconConfig.onClick}
               onContextMenu={e => handleIconContextMenu(e, { ...icon, ...iconConfig })}
-              // Only trash icon is a drop target:
-              {...(isTrash
-                ? {
-                    onDragOver: handleTrashDragOver,
-                    onDrop: handleTrashDrop,
-                    onDragLeave: handleTrashDragLeave,
-                  }
-                : {
-                    draggable: icon.trashable,
-                    onDragStart: () => handleDragStart(icon.id),
-                    onDragEnd: handleDragEnd,
-                  })}
-            >
-              <img src={icon.icon} alt={icon.name} className="w-12 h-12" />
-              <span className="text-xs mt-1 text-center">{icon.name}</span>
-            </div>
+              isTrash={isTrash}
+              isTrashOver={isTrashOver}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleTrashDragOver}
+              onDrop={handleTrashDrop}
+              onDragLeave={handleTrashDragLeave}
+            />
           );
         })}
 
       {/* Context Menu for Desktop Icon */}
-      {contextMenu.visible && (
-        <div
-          className="fixed z-50 bg-gray-800 text-white text-sm border border-gray-600 rounded shadow"
-          style={{
-            top: contextMenu.y,
-            left: contextMenu.x,
-            width: "140px",
-          }}
-          onClick={handleTrashIcon}
-        >
-          <div className="px-3 py-2 hover:bg-red-600 cursor-pointer">🗑 Move to Trash</div>
-        </div>
-      )}
+      <ContextMenu
+        visible={contextMenu.visible}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        actions={[
+          {
+            label: "🗑 Move to Trash",
+            onClick: handleTrashIcon,
+            colorClass: "hover:bg-red-600",
+          },
+        ]}
+        onClose={handleCloseContextMenu}
+      />
 
       {/* Start Menu */}
       {showStartMenu && (
-        <div className="absolute bottom-12 left-4 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg text-sm z-50 start-menu">
-          <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={onExit}>🖥 Terminal</div>
-          <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={() => setShowAbout(true)}>👤 About</div>
-          <div className="p-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2" onClick={() => { setStartPath('/'); setShowFiles(true); }}>
-            <img src="/icons/folder-icon.png" alt="Files" className="w-4 h-4" /> Files
-          </div>
-          <a
-            href="https://github.com/n1ghtx0w1"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 hover:bg-gray-700 cursor-pointer block"
-          >
-            📁 Projects
-          </a>
-          <div className="p-2 hover:bg-gray-700 cursor-pointer" onClick={() => setShowStartMenu(false)}>❌ Close Menu</div>
-        </div>
+        <StartMenu
+          onExit={onExit}
+          onShowAbout={() => setShowAbout(true)}
+          onShowFiles={() => { setStartPath('/'); setShowFiles(true); }}
+        />
       )}
 
       {/* App Windows */}
@@ -372,38 +358,14 @@ export default function Desktop({ onExit }) {
       {showExploit && <ExploitModal onComplete={onExit} />}
 
       {/* Taskbar */}
-      <div className="absolute bottom-0 w-full h-12 px-4 flex justify-between items-center bg-black/60 backdrop-blur-md border-t border-gray-700 rounded-t-xl shadow-md z-50">
-        <div
-          onClick={() => setShowStartMenu((prev) => !prev)}
-          className="start-button cursor-pointer p-1 rounded focus:outline-none"
-        >
-          <img src="/icons/menu-button.png" alt="Start" className="w-8 h-8 object-contain" />
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative volume-control">
-            <button
-              onClick={() => setShowVolume((prev) => !prev)}
-              className="text-white hover:bg-white/10 px-2 py-1 rounded"
-            >
-              🔊
-            </button>
-            {showVolume && (
-              <div className="absolute bottom-10 right-0 w-32 bg-gray-800 p-2 rounded shadow border border-gray-700">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={volume}
-                  onChange={(e) => setVolume(parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <div className="text-xs text-center text-gray-300 mt-1">{volume}%</div>
-              </div>
-            )}
-          </div>
-          <div className="text-sm text-gray-300">{time}</div>
-        </div>
-      </div>
+      <Taskbar
+        time={time}
+        showVolume={showVolume}
+        setShowVolume={setShowVolume}
+        volume={volume}
+        setVolume={setVolume}
+        setShowStartMenu={setShowStartMenu}
+      />
     </div>
   );
 }

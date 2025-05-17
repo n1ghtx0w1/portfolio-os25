@@ -15,10 +15,13 @@ This interactive experience launches with a bootloader screen, drops users into 
 ## 📝 Changelog
 
 **Recent Updates**
+- Refactored: Broke up Desktop and FileExplorer into smaller modular components (DesktopIcon, Taskbar, StartMenu, FileNode, ContextMenu, modals)
+- ContextMenu component now shared between Desktop and FileExplorer
+- Updated import paths and project structure for easier future growth
 - Added drag-and-drop support for desktop icons to Trash
 - Trash bin now supports restoring files and desktop icons
 - Fixed cross-platform file path logic for certificates and awards images
-- Enhanced right-click context menus for Trash/Restore actions
+- Enhanced right-click context menus for Trash/Restore actions (works Android not IOS)
 
 ---
 
@@ -56,16 +59,29 @@ This interactive experience launches with a bootloader screen, drops users into 
 
 ## 📁 Project Structure
 ```
-portfolio-os25/
-├── public/                 
-│   └── icons/              # Folder and terminal icons
-│   └── certificates/       # Award & certificate images (for achievements modal)
+├── public/
+│ └── icons/
+│ └── certificates/
 ├── src/
-│   ├── components/         # Terminal, Desktop, FileExplorer, Viewers
-│   │── blog/               # Markdown blog posts (auto-loaded from frontmatter)
-│   ├── data/               # Virtual file system and loaders
-│   ├── App.jsx             # Routing logic
-│   └── main.jsx            # React entry point
+│ ├── components/
+│ │ ├── Desktop/
+│ │ │ ├── Desktop.jsx
+│ │ │ ├── DesktopIcon.jsx
+│ │ │ ├── Taskbar.jsx
+│ │ │ └── StartMenu.jsx
+│ │ ├── FileExplorer/
+│ │ │ ├── FileExplorer.jsx
+│ │ │ └── FileNode.jsx
+│ │ ├── ContextMenu.jsx
+│ │ ├── AboutWindow.jsx
+│ │ ├── ExploitModal.jsx
+│ │ ├── MarkdownViewer.jsx
+│ │ ├── PermissionDeniedModal.jsx
+│ │ └── TextViewer.jsx
+│ │── blog/
+│ ├── data/
+│ ├── App.jsx
+│ └── main.jsx
 └── README.md
 ```
 

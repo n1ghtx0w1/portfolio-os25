@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Desktop from './Desktop';
+import Desktop from './Desktop/Desktop';
 
 const banner = `
  ________    _________________   .________
