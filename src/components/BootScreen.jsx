@@ -75,6 +75,16 @@ export default function BootScreen({ onComplete }) {
   const bootComplete = useRef(false);
   const scrollRef = useRef(null);
 
+  
+  function handleTouchOrClick() {
+    if (!bootComplete.current) {
+      bootComplete.current = true;
+      clearTimeout(timeoutRef.current);
+      setLines([...bootMessages]);
+      setTimeout(onComplete, 100);
+    }
+  }
+
   useEffect(() => {
     indexRef.current = 0;
     bootComplete.current = false;
@@ -157,8 +167,9 @@ return (
   <div
     ref={scrollRef}
     className="fixed inset-0 bg-black text-sm font-mono overflow-y-auto"
-    style={{ height: '100vh', width: '100vw', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-  >
+    style={{ height: '100vh', width: '100vw', scrollbarWidth: 'none', msOverflowStyle: 'none' }}  >
+    onClick={handleTouchOrClick}
+    onTouchStart={handleTouchOrClick}
     <pre className="text-white mb-4 whitespace-pre leading-tight font-mono text-sm px-4 pt-4">
       {banner}
     </pre>
