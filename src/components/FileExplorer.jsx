@@ -42,7 +42,7 @@ function ThankYouModal({ onClose, message = "You removed a malicious file from t
   );
 }
 
-// Moved FileNode here for closure (this is a functional component!)
+// FileNode functional component
 function FileNode({
   name,
   content,
@@ -55,8 +55,8 @@ function FileNode({
   const isFolder = typeof content === "object" && !content.content && !content.fileType;
   const [expanded, setExpanded] = useState(false);
 
-  // Check for folder restriction
-  const isRestricted = !(path.startsWith("/home") || path.startsWith("/tmp") || path.startsWith("/trash"));
+  // Restrict guest user from certain folders
+  const isRestricted = !(path.startsWith("/home") || path.startsWith("/tmp") || path.startsWith("/trash") || path.startsWith("/quarantine"));
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -67,18 +67,32 @@ function FileNode({
       }
       setExpanded(!expanded);
     } else {
+      // Block opening quarantined files!
+      if (path.startsWith("/quarantine")) {
+        alert("You cannot open or run quarantined files.");
+        return;
+      }
       onOpenFile(path, content.content || content);
     }
   };
 
-const handleRightClick = (e) => {
-  const isInTrash = path.startsWith("/trash");
-  if (!isFolder || isInTrash) {
-    e.preventDefault();
-    onShowContextMenu(e.clientX, e.clientY, path, content);
-  }
-};
-  // Responsive indent: less left margin on mobile
+  const handleRightClick = (e) => {
+    // Always allow context menu for files in /trash or /quarantine, or special files
+    const isInTrash = path.startsWith("/trash");
+    const isInQuarantine = path.startsWith("/quarantine");
+    // Special-case: allow context menu for exploit.sh in /tmp
+    if (
+      !isFolder ||
+      isInTrash ||
+      isInQuarantine ||
+      path === "/tmp/exploit.sh"
+    ) {
+      e.preventDefault();
+      onShowContextMenu(e.clientX, e.clientY, path, content);
+    }
+  };
+
+  // Responsive indent for folder level
   const indentClass =
     level === 0
       ? ""
@@ -113,7 +127,7 @@ const handleRightClick = (e) => {
           </span>
         )}
       </div>
-      {/* Only render folder children if allowed and expanded */}
+      {/* Render folder children if expanded and allowed */}
       {isFolder && expanded && !isRestricted && (
         <div>
           {Object.entries(content)
@@ -179,31 +193,37 @@ export default function FileExplorer({
     current = current[part];
   }
 
-  const [showPermissionModal, setShowPermissionModal] = useState(false);
-  const [showThanksModal, setShowThanksModal] = useState(false);
-  const [thanksMessage, setThanksMessage] = useState("");
-  const [contextMenu, setContextMenu] = useState({
-    visible: false,
-    x: 0,
-    y: 0,
-    filePath: null,
-    fileContent: null,
-  });
+    const [showPermissionModal, setShowPermissionModal] = useState(false);
+    const [showThanksModal, setShowThanksModal] = useState(false);
+    const [thanksMessage, setThanksMessage] = useState("");
+    const [contextMenu, setContextMenu] = useState({
+      visible: false,
+      x: 0,
+      y: 0,
+      filePath: null,
+      fileContent: null,
+    });
 
-  const handleOpenFile = (filePath, content) => {
+    const handleOpenFile = (filePath, content) => {
     onOpenFile(filePath, content);
-  };
+    };
 
-  // Remove from /trash
-  const handleDeleteFile = () => {
+  // Move file to Trash
+    const handleDeleteFile = () => {
     const path = contextMenu.filePath;
     const parts = path.split("/").filter(Boolean);
 
-    // Don't allow deleting from /trash!
-    if (parts[0] === "trash") {
-      setThanksMessage("File is already in the Trash!");
+    // Don't allow deleting from /trash or /quarantine!
+    if (parts[0] === "trash" || parts[0] === "quarantine") {
+      setThanksMessage("This file cannot be deleted from here!");
       setShowThanksModal(true);
       setContextMenu({ ...contextMenu, visible: false });
+      return;
+    }
+
+    // Special: Quarantine workflow for exploit.sh
+    if (path === "/tmp/exploit.sh") {
+      handleQuarantineFile();
       return;
     }
 
@@ -229,7 +249,35 @@ export default function FileExplorer({
     setContextMenu({ ...contextMenu, visible: false });
   };
 
-  // RESTORE handler for desktop icons
+  // Quarantine handler for exploit.sh
+  const handleQuarantineFile = () => {
+    const path = contextMenu.filePath;
+    const parts = path.split("/").filter(Boolean);
+
+    // Find parent folder
+    let parent = fileSystem["/"];
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!parent[parts[i]]) return;
+      parent = parent[parts[i]];
+    }
+    const filename = parts[parts.length - 1];
+
+    // Move file to /quarantine
+    if (parent[filename]) {
+      if (!fileSystem["/"].quarantine) fileSystem["/"].quarantine = {};
+      fileSystem["/"].quarantine[filename] = {
+        ...parent[filename],
+        __quarantinedFrom: "/" + parts.slice(0, -1).join("/"),
+      };
+      delete parent[filename];
+      setThanksMessage("You quarantined a suspicious file! Thanks for keeping the system safe.");
+      setShowThanksModal(true);
+      if (setVfs) setVfs(structuredClone(fileSystem));
+    }
+    setContextMenu({ ...contextMenu, visible: false });
+  };
+
+  // RESTORE logic for desktop icons (from trash)
   const handleRestoreDesktopIcon = () => {
     const key = contextMenu.filePath.split("/").pop();
     const fileObj = fileSystem["/"].trash[key];
@@ -256,27 +304,33 @@ export default function FileExplorer({
   };
 
   // RESTORE handler for all other files (not desktop icons)
-    const handleRestoreFile = () => {
+  const handleRestoreFile = () => {
     const key = contextMenu.filePath.split("/").pop();
     const fileObj = fileSystem["/"].trash[key];
     if (fileObj && fileObj.__trashedFrom) {
       // Parse original path
-    const originalPath = fileObj.__trashedFrom.replace(/^\//, '').split('/');
-    let parent = fileSystem["/"];
-    for (let part of originalPath) {
-      if (!parent[part]) parent[part] = {}; 
-      parent = parent[part];
+      const originalPath = fileObj.__trashedFrom.replace(/^\//, '').split('/');
+      let parent = fileSystem["/"];
+      for (let part of originalPath) {
+        if (!parent[part]) parent[part] = {}; // auto-create folders if needed
+        parent = parent[part];
+      }
+      let restoreValue = { ...fileObj };
+      if (!restoreValue.content && typeof fileObj === "string") {
+        restoreValue = { content: fileObj };
+      }
+      delete restoreValue.__trashedFrom;
+      delete restoreValue.fileType;
+      parent[key] = restoreValue;
+      delete fileSystem["/"].trash[key];
+      if (setVfs) setVfs(structuredClone(fileSystem));
+      setThanksMessage("File restored to original location!");
+      setShowThanksModal(true);
     }
-    parent[key] = { ...fileObj };
-    delete parent[key].__trashedFrom;
-    delete parent[key].fileType;
-    delete fileSystem["/"].trash[key];
-    if (setVfs) setVfs(structuredClone(fileSystem));
-  }
     setContextMenu({ ...contextMenu, visible: false });
-};
+  };
 
-  // Right-click handler for context menu
+  // Context menu logic for files
   const handleShowContextMenu = (x, y, filePath, fileContent) => {
     setContextMenu({
       visible: true,
@@ -296,17 +350,19 @@ export default function FileExplorer({
   const width = isMobile ? window.innerWidth * 0.98 : 500;
   const height = isMobile ? window.innerHeight * 0.7 : 400;
 
-  // Detect if right-clicked item is a trashed desktop icon
   const isRestoreDesktopIcon =
     startPath === "/trash" &&
     contextMenu.fileContent &&
     contextMenu.fileContent.fileType === "desktop-icon";
 
-  // Detect if restoring a normal file from trash
   const isRestoreFile =
     startPath === "/trash" &&
     contextMenu.fileContent &&
     contextMenu.fileContent.fileType !== "desktop-icon";
+
+  // Special-case: Show Quarantine for exploit.sh in /tmp
+  const isQuarantineAction =
+    contextMenu.filePath === "/tmp/exploit.sh";
 
   return (
     <>
@@ -368,7 +424,7 @@ export default function FileExplorer({
           style={{
             top: contextMenu.y,
             left: contextMenu.x,
-            width: "160px",
+            width: "180px",
           }}
         >
           {startPath === "/trash" ? (
@@ -387,6 +443,13 @@ export default function FileExplorer({
                 ♻️ Restore File
               </div>
             ) : null
+          ) : isQuarantineAction ? (
+            <div
+              className="px-3 py-2 hover:bg-green-700 cursor-pointer transition"
+              onClick={handleQuarantineFile}
+            >
+              🦠 Quarantine
+            </div>
           ) : (
             <div
               className="px-3 py-2 hover:bg-gray-700 cursor-pointer transition"
